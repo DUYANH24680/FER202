@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:3001";
+const API = "http://localhost:9999";
 
 function AdminInventoryReport() {
   const [books, setBooks] = useState([]);

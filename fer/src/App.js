@@ -3,17 +3,16 @@ import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-ro
 import { Navbar, Nav, Container } from 'react-bootstrap';
 
 import AdminBookList from './components/AdminBookList';
-import BorrowRequests from './components/BorrowRequests';
+
 import UserAvailableBooks from './components/UserAvailableBooks';
-import BorrowHistory from './components/BorrowHistory';
+
 import Register from './components/Register';
 import Login from './components/Login';
-import BookDetails from './components/BookDetails';
-import AdminUserList from './components/AdminUserList';
+
 import AdminCategories from './components/AdminCategories';
 import AdminSearchPro from './components/AdminSearchPro';
 import AdminBookStatus from './components/AdminBookStatus';
-import AdminImport from './components/AdminImport';
+
 import AdminInventoryReport from './components/AdminInventoryReport';
 
 import { ProtectedRoute } from './utils/ProtectedRoute';
@@ -100,23 +99,8 @@ function App() {
                         }
                     />
 
-                    <Route
-                        path="/admin/requests"
-                        element={
-                            <ProtectedRoute auth={auth} allowedRole="admin">
-                                <BorrowRequests />
-                            </ProtectedRoute>
-                        }
-                    />
 
-                    <Route
-                        path="/admin/userlist"
-                        element={
-                            <ProtectedRoute auth={auth} allowedRole="admin">
-                                <AdminUserList />
-                            </ProtectedRoute>
-                        }
-                    />
+                   
 
                     <Route
                         path="/admin/categories"
@@ -145,14 +129,7 @@ function App() {
                         }
                     />
 
-                    <Route
-                        path="/admin/import"
-                        element={
-                            <ProtectedRoute auth={auth} allowedRole="admin">
-                                <AdminImport />
-                            </ProtectedRoute>
-                        }
-                    />
+                 
 
                     <Route
                         path="/admin/inventory-report"
@@ -172,23 +149,9 @@ function App() {
                         }
                     />
 
-                    <Route
-                        path="/user/history"
-                        element={
-                            <ProtectedRoute auth={auth} allowedRole="user">
-                                <BorrowHistory auth={auth} />
-                            </ProtectedRoute>
-                        }
-                    />
+                   
 
-                    <Route
-                        path="/user/books/:id"
-                        element={
-                            <ProtectedRoute auth={auth} allowedRole="user">
-                                <BookDetails auth={auth} />
-                            </ProtectedRoute>
-                        }
-                    />
+                    
 
                 </Routes>
             </Container>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Table, Button, Form, Modal } from "react-bootstrap";
 
-const API = "http://localhost:3001";
+const API = "http://localhost:9999";
 
 function AdminCategories() {
   const [categories, setCategories] = useState([]);

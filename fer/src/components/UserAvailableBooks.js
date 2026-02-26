@@ -16,8 +16,8 @@ function UserAvailableBooks({ auth }) {
     useEffect(() => {
         const fetchBooks = async () => {
             const [booksRes, borrowsRes] = await Promise.all([
-                axios.get('http://localhost:5000/books'),
-                axios.get(`http://localhost:5000/borrows?userId=${auth.id}`)
+                axios.get('http://localhost:9999/books'),
+                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`)
             ]);
             setBooks(booksRes.data);
             setFilteredBooks(booksRes.data);
@@ -72,7 +72,7 @@ function UserAvailableBooks({ auth }) {
                 return;
             }
 
-            const allUsers = await axios.get('http://localhost:5000/borrows');
+            const allUsers = await axios.get('http://localhost:9999/borrows');
             const nextId = allUsers.data.length > 0
                 ? Math.max(...allUsers.data.map(user => Number(user.id))) + 1
                 : 1;
@@ -86,12 +86,12 @@ function UserAvailableBooks({ auth }) {
                 requestDate: new Date().toISOString()
             };
 
-            await axios.post('http://localhost:5000/borrows', newUser);
+            await axios.post('http://localhost:9999/borrows', newUser);
 
             setMessage('Borrow request submitted successfully');
 
 
-            const borrowsRes = await axios.get(`http://localhost:5000/borrows?userId=${auth.id}`);
+            const borrowsRes = await axios.get(`http://localhost:9999/borrows?userId=${auth.id}`);
             setBorrowed(borrowsRes.data);
         } catch (error) {
             setMessage('Failed to submit borrow request');

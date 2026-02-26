@@ -39,7 +39,8 @@
       "decription": "Những câu chuyện về chú mèo máy thông minh Doraemon...",
       "available": true,
       "categoryId": 1,
-      "image": "https://product.hstatic.net/200000343865/product/44_6a61ccbacff040ceab7608d2d982bae6_9f2baf95128e4310b4ee675c71c073df_master.jpg"
+      "image": "https://product.hstatic.net/200000343865/product/44_6a61ccbacff040ceab7608d2d982bae6_9f2baf95128e4310b4ee675c71c073df_master.jpg",
+      "status": null
     },
     {
       "id": "4",

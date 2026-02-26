@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Form, Table } from "react-bootstrap";
 
-const API = "http://localhost:3001";
+const API = "http://localhost:9999";
 
 function AdminSearchPro() {
   const [books, setBooks] = useState([]);
@@ -17,10 +17,10 @@ function AdminSearchPro() {
     setBooks(res.data);
   };
 
-  const filtered = books.filter(b =>
-    b.title.toLowerCase().includes(keyword.toLowerCase()) ||
-    b.author.toLowerCase().includes(keyword.toLowerCase())
-  );
+ const filtered = books.filter(b =>
+  (b.title?.toLowerCase().includes(keyword.toLowerCase()) || '') ||
+  (b.author?.toLowerCase().includes(keyword.toLowerCase()) || '')
+);
 
   return (
     <div>

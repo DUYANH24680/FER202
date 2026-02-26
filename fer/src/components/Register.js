@@ -15,7 +15,7 @@ function Register() {
 
     try {
       // Check if username already exists
-      const existingUser = await axios.get(`http://localhost:5000/users?username=${username}`);
+      const existingUser = await axios.get(`http://localhost:9999/users?username=${username}`);
       if (existingUser.data.length > 0) {
         setError('Username already exists. Please choose a different username.');
         return;

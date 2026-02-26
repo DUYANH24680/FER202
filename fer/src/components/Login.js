@@ -14,7 +14,7 @@ function Login({ setAuth }) {
     setError('');
 
     try {
-      const response = await axios.get(`http://localhost:5000/users?username=${username}`);
+      const response = await axios.get(`http://localhost:9999/users?username=${username}`);
       const user = response.data[0];
       
       if (user && user.password === password) {
