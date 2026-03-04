@@ -12,7 +12,7 @@ function AdminBookList() {
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/books');
+                const res = await axios.get('http://localhost:9999/books');
                 setBooks(res.data);
             } catch (err) {
                 console.error(err);
@@ -36,15 +36,15 @@ function AdminBookList() {
 
             if (currentBook.id) {
                 // Update Book
-                await axios.put(`http://localhost:5000/books/${currentBook.id}`, currentBook);
+                await axios.put(`http://localhost:9999/books/${currentBook.id}`, currentBook);
             } else {
                 // Add New Book
-                await axios.post('http://localhost:5000/books', currentBook);
+                await axios.post('http://localhost:9999/books', currentBook);
             }
             setShowModal(false);
             setCurrentBook({ id: null, title: '', author: '', available: true, image: '' }); // Reset form
             // Re-fetch books after adding/updating
-            const res = await axios.get('http://localhost:5000/books');
+            const res = await axios.get('http://localhost:9999/books');
             setBooks(res.data);
         } catch (err) {
             console.error(err);
@@ -59,9 +59,9 @@ function AdminBookList() {
         if (window.confirm('Are you sure you want to delete this book?')) {
             setLoading(true);
             try {
-                await axios.delete(`http://localhost:5000/books/${bookId}`);
+                await axios.delete(`http://localhost:9999/books/${bookId}`);
                 // Re-fetch books after deletion
-                const res = await axios.get('http://localhost:5000/books');
+                const res = await axios.get('http://localhost:9999/books');
                 setBooks(res.data);
             } catch (err) {
                 console.error(err);
