@@ -1,61 +1,105 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, Alert, Container } from 'react-bootstrap';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { Form, Button, Alert, Container, Card } from "react-bootstrap";
 
 function Login({ setAuth }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
+
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      const response = await axios.get(`http://localhost:9999/users?username=${username}`);
+
+      const response = await axios.get(
+        `http://localhost:9999/users?username=${username}`
+      );
+
       const user = response.data[0];
-      
+
       if (user && user.password === password) {
+
+        console.log("User role:", user.role);
+
         setAuth(user);
-        localStorage.setItem('user', JSON.stringify(user));
-        navigate(user.role === 'admin' ? '/admin/books' : '/user/books');
-      } else {
-        setError('Invalid username or password');
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // điều hướng theo role
+        if (user.role === "admin") {
+          navigate("/admin/books");
+        } 
+        else if (user.role === "staff") {
+          navigate("/staff/requests");
+        } 
+        else {
+          navigate("/user/books");
+        }
+
+      } 
+      else {
+        setError("Invalid username or password");
       }
-    } catch (error) {
-      setError('Login failed. Please try again.');
+
+    } 
+    catch (err) {
+      setError("Login failed. Please try again.");
     }
   };
 
   return (
-    <Container>
-    <div  className="w-100" style={{ maxWidth: '400px', margin: '0 auto' }}>
-      <h2>Login</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Form onSubmit={handleLogin}>
-        <Form.Group className="mb-3" controlId="username">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="password">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </Form.Group>
-        <Button type="submit">Login</Button>
-      </Form>
-    </div>
+    <Container className="d-flex justify-content-center align-items-center vh-100">
+
+      <Card style={{ width: "400px", padding: "20px", boxShadow: "0 0 10px rgba(0,0,0,0.2)" }}>
+        
+        <h3 className="text-center mb-4">Library Login</h3>
+
+        {error && <Alert variant="danger">{error}</Alert>}
+
+        <Form onSubmit={handleLogin}>
+
+          <Form.Group className="mb-3">
+
+            <Form.Label>Username</Form.Label>
+
+            <Form.Control
+              type="text"
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+
+            <Form.Label>Password</Form.Label>
+
+            <Form.Control
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+          </Form.Group>
+
+          <Button variant="primary" type="submit" className="w-100">
+            Login
+          </Button>
+
+        </Form>
+
+      </Card>
+
     </Container>
   );
 }
