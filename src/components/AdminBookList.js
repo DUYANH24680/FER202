@@ -72,11 +72,11 @@ function AdminBookList() {
         }
     };
 
-    // Open modal for adding a new book
-    const openAddBookModal = () => {
-        setCurrentBook({ id: null, title: '', author: '', available: true, image: '' });
-        setShowModal(true);
-    };
+    // // Open modal for adding a new book
+    // const openAddBookModal = () => {
+    //     setCurrentBook({ id: null, title: '', author: '', available: true, image: '' });
+    //     setShowModal(true);
+    // };
 
     // Open modal for editing an existing book
     const openEditBookModal = (book) => {
@@ -87,8 +87,7 @@ function AdminBookList() {
     return (
         <div>
             <h2>Manage Books</h2>
-            <Button className="me-2 mb-2" variant="primary" onClick={openAddBookModal}>Add Book</Button>
-
+            {/* <Button className="me-2 mb-2" variant="primary" onClick={openAddBookModal}>Add Book</Button> */}
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Table striped bordered hover>
