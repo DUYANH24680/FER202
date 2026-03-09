@@ -1,0 +1,158 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "123",
+      "role": "admin"
+    },
+    {
+      "id": "2",
+      "username": "user1",
+      "password": "123",
+      "role": "user"
+    },
+    {
+      "id": "3",
+      "username": "user",
+      "password": "123",
+      "role": "user"
+    },
+    {
+      "id": "4",
+      "username": "admin1",
+      "password": "123",
+      "role": "admin"
+    },
+    {
+      "id": 5,
+      "username": "Duyanh23",
+      "password": "Duyanh23",
+      "role": "user"
+    }
+  ],
+  "books": [
+    {
+      "id": "3",
+      "title": "Doraemon truyện ngắn - Tập 44",
+      "author": "Fujiko Fujio",
+      "decription": "Những câu chuyện về chú mèo máy thông minh Doraemon và nhóm bạn Nobita, Shizuka, Suneo, Jaian, Dekisugi sẽ đưa chúng ta bước vào thế giới hồn nhiên, trong sáng đầy ắp tiếng cười với một kho bảo bối kì diệu - những bảo bối biến ước mơ của chúng ta thành sự thật. Nhưng trên tất cả Doraemon là hiện thân của tình bạn cao đẹp, của niềm khát khao vươn tới những tầm cao.",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/44_6a61ccbacff040ceab7608d2d982bae6_9f2baf95128e4310b4ee675c71c073df_master.jpg"
+    },
+    {
+      "id": "4",
+      "title": "Doraemon truyện ngắn - Tập 29",
+      "author": "Fujiko Fujio",
+      "decription": "Những câu chuyện về chú mèo máy thông minh Doraemon và nhóm bạn Nobita, Shizuka, Suneo, Jaian, Dekisugi sẽ đưa chúng ta bước vào thế giới hồn nhiên, trong sáng đầy ắp tiếng cười với một kho bảo bối kì diệu - những bảo bối biến ước mơ của chúng ta thành sự thật. Nhưng trên tất cả Doraemon là hiện thân của tình bạn cao đẹp, của niềm khát khao vươn tới những tầm cao.",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/29_188d71b431f14e37b2177d15dde99f88_0403fcfb013344039e402d521eb3261b_master.jpg"
+    },
+    {
+      "id": "5",
+      "title": "Doraemon truyện ngắn - Tập 2",
+      "author": "Fujiko Fujio",
+      "decription": "Những câu chuyện về chú mèo máy thông minh Doraemon và nhóm bạn Nobita, Shizuka, Suneo, Jaian, Dekisugi sẽ đưa chúng ta bước vào thế giới hồn nhiên, trong sáng đầy ắp tiếng cười với một kho bảo bối kì diệu - những bảo bối biến ước mơ của chúng ta thành sự thật. Nhưng trên tất cả Doraemon là hiện thân của tình bạn cao đẹp, của niềm khát khao vươn tới những tầm cao.",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/2_59a0dfb7943f48c6ba247935d05c25f4_5d3df2542dbb4590878619ea9d3906b3_master.jpg"
+    },
+    {
+      "id": "6",
+      "title": "Doraemon truyện ngắn - Tập 28",
+      "author": "Fujiko Fujio",
+      "decription": "Những câu chuyện về chú mèo máy thông minh Doraemon và nhóm bạn Nobita, Shizuka, Suneo, Jaian, Dekisugi sẽ đưa chúng ta bước vào thế giới hồn nhiên, trong sáng đầy ắp tiếng cười với một kho bảo bối kì diệu - những bảo bối biến ước mơ của chúng ta thành sự thật. Nhưng trên tất cả Doraemon là hiện thân của tình bạn cao đẹp, của niềm khát khao vươn tới những tầm cao.",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/28_a75e3f6ae2bc4c98b3000051ebc40135_35c2b5b96f854cb4b677f11c358ff45f_large.jpg"
+    },
+    {
+      "id": "7",
+      "title": "Doraemon truyện ngắn - Tập 40",
+      "author": "Fujiko Fujio",
+      "decription": "Những câu chuyện về chú mèo máy thông minh Doraemon và nhóm bạn Nobita, Shizuka, Suneo, Jaian, Dekisugi sẽ đưa chúng ta bước vào thế giới hồn nhiên, trong sáng đầy ắp tiếng cười với một kho bảo bối kì diệu - những bảo bối biến ước mơ của chúng ta thành sự thật. Nhưng trên tất cả Doraemon là hiện thân của tình bạn cao đẹp, của niềm khát khao vươn tới những tầm cao.",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/40_60c041f35c6f44d4b28081d2a0b4f139_b58db15b1da347aaa9b3698907dc63a0_large.jpg"
+    },
+    {
+      "id": "8",
+      "title": "Thám tử lừng danh Conan - Tập 24",
+      "author": "Gosho Aoyama",
+      "decription": "Nhận lời mời của Heiji, chúng tôi đang rất háo hức đến thăm Osaka, để được tha hồ thưởng thức những món ăn tuyệt vời của thành phố. Vậy mà lại bị cuốn theo một vụ án mạng buộc chúng tôi phải di chuyển liên tục, hết đông sang tây, khắp các phố của Osaka!! Nhờ chuyến du lịch này, tôi đã có thể hiểu rõ hơn về Heiji!!",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/24_4e9d29cfa94e4f0f8a1ee989ddf8afae_7b97b23c55504fcbab1685b3313dfed7_8409f1cfe5ec488fb27edaccb15bf4e5_large.jpg"
+    },
+    {
+      "id": "9",
+      "title": "Quiz! Khoa học kì thú - Khoa học điều tra",
+      "author": "An Kwang-hyeon",
+      "decription": "Thời xa xưa, quá trình điều tra được tiến hành như thế nào? Hãy đồng hành với các nhân vật đáng yêu trong cuốn sách để cùng nhau giải đáp thắc mắc của chúng mình về các phương pháp điều tra tiên tiến nhất nhé!",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/quiz_-khoa-hoc-ki-thu_khoa-hoc-dieu-tra_bia_32e18f65661f4aeb934152e38bd13470_large.jpg"
+    },
+    {
+      "id": "10",
+      "title": "Lục địa rồng - 3 - Lời nói dối của vị thần",
+      "author": "Cao Việt Quỳnh",
+      "decription": "Với sự trợ giúp của “sức mạnh quạ” thần bí là Huginn và Muninn, Jim lấy lại được một phần sức mạnh siêu nhân. Cậu cùng Những Người Con Của Rồng giúp các vương quốc bên dãy núi Liên Minh chống lại đội quân của Yêu Tinh, phù thủy hắc ám và các tà thần…",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/3_4daf35717c2b4a839d12f93dbf352333_large.jpg"
+    },
+    {
+      "id": "11",
+      "title": "Thám tử lừng danh Conan - Tập 6",
+      "author": "Gosho Aoyama",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/6_cb8c2d42f6a146938af3f83140b7d1d6_large.jpg"
+    }
+  ],
+  "borrows": [
+    {
+      "id": "1",
+      "bookId": 3,
+      "userId": 3,
+      "status": "approved",
+      "requestDate": "2024-11-07T06:09:21.724Z"
+    },
+    {
+      "id": "2",
+      "bookId": 3,
+      "userId": 5,
+      "status": "approved",
+      "requestDate": "2024-11-07T06:15:36.504Z"
+    },
+    {
+      "id": "3",
+      "bookId": "8",
+      "userId": "3",
+      "status": "approved",
+      "requestDate": "2025-07-22T08:29:35.948Z"
+    },
+    {
+      "id": 4,
+      "bookId": "9",
+      "userId": "3",
+      "status": "approved",
+      "requestDate": "2026-01-06T06:08:26.132Z"
+    },
+    {
+      "id": 5,
+      "bookId": "3",
+      "userId": null,
+      "status": "approved",
+      "requestDate": "2026-02-24T06:34:48.880Z"
+    },
+    {
+      "id": 6,
+      "bookId": "3",
+      "userId": 5,
+      "status": "approved",
+      "requestDate": "2026-02-26T10:05:21.678Z"
+    },
+    {
+      "id": 7,
+      "bookId": "4",
+      "userId": 5,
+      "status": "approved",
+      "requestDate": "2026-02-26T10:05:22.961Z"
+    }
+  ]
+}

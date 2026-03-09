@@ -1,0 +1,139 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "123",
+      "role": "admin"
+    },
+    {
+      "id": "2",
+      "username": "staff1",
+      "password": "123",
+      "role": "staff"
+    },
+    {
+      "id": "3",
+      "username": "user",
+      "password": "123",
+      "role": "user"
+    },
+    {
+      "id": "4",
+      "username": "admin1",
+      "password": "123",
+      "role": "admin"
+    },
+    {
+      "id": "5",
+      "username": "Duyanh23",
+      "password": "Duyanh12",
+      "role": "admin"
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Truyện tranh"
+    }
+  ],
+  "series": [
+    {
+      "id": "1",
+      "name": "Doraemon",
+      "categoryId": "1"
+    },
+    {
+      "id": "2",
+      "name": "Thám tử lừng danh Conan",
+      "categoryId": "1"
+    }
+  ],
+  "books": [
+    {
+      "id": "1",
+      "title": "Doraemon truyện ngắn - Tập 29",
+      "author": "Fujiko Fujio",
+      "description": "Những câu chuyện về chú mèo máy Doraemon",
+      "available": false,
+      "image": "https://product.hstatic.net/200000343865/product/29_188d71b431f14e37b2177d15dde99f88_0403fcfb013344039e402d521eb3261b_master.jpg",
+      "status": "lost",
+      "categoryId": "1",
+      "seriesId": "1",
+      "statusDate": "2026-03-09"
+    },
+    {
+      "id": "2",
+      "title": "Doraemon truyện ngắn - Tập 2",
+      "author": "Fujiko Fujio",
+      "description": "Những câu chuyện Doraemon",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/2_59a0dfb7943f48c6ba247935d05c25f4_5d3df2542dbb4590878619ea9d3906b3_master.jpg",
+      "status": null,
+      "categoryId": "1",
+      "seriesId": "1",
+      "statusDate": null
+    },
+    {
+      "id": "3",
+      "title": "Doraemon truyện dài - Nobita và nước Nhật thời nguyên thủy",
+      "author": "Fujiko Fujio",
+      "description": "Phần truyện dài của Doraemon",
+      "available": true,
+      "image": "https://cdn0.fahasa.com/media/catalog/product/d/o/doraemon-truyen-dai-1.jpg",
+      "status": null,
+      "categoryId": "1",
+      "seriesId": "1",
+      "statusDate": null,
+      "comment": "ád"
+    },
+    {
+      "id": "4",
+      "title": "Thám tử lừng danh Conan - Tập 24",
+      "author": "Gosho Aoyama",
+      "description": "Câu chuyện Conan",
+      "available": true,
+      "image": "https://product.hstatic.net/200000343865/product/24_4e9d29cfa94e4f0f8a1ee989ddf8afae_7b97b23c55504fcbab1685b3313dfed7_large.jpg",
+      "status": null,
+      "categoryId": "1",
+      "seriesId": "2",
+      "statusDate": null
+    },
+    {
+      "id": "5",
+      "title": "Doraemon truyện ngắn - Tập 2",
+      "author": "Fujiko Fujio",
+      "description": "Những câu chuyện Doraemon",
+      "available": false,
+      "image": "https://product.hstatic.net/200000343865/product/2_59a0dfb7943f48c6ba247935d05c25f4_5d3df2542dbb4590878619ea9d3906b3_master.jpg",
+      "status": "damaged",
+      "categoryId": "1",
+      "seriesId": "1",
+      "statusDate": "2026-03-09",
+      "comment": "ád"
+    }
+  ],
+  "borrows": [
+    {
+      "id": "1",
+      "bookId": "1",
+      "userId": "3",
+      "status": "approved",
+      "requestDate": "2024-11-07T06:09:21.724Z"
+    },
+    {
+      "id": "2",
+      "bookId": "2",
+      "userId": "5",
+      "status": "approved",
+      "requestDate": "2024-11-07T06:15:36.504Z"
+    },
+    {
+      "id": "3",
+      "bookId": "4",
+      "userId": "3",
+      "status": "approved",
+      "requestDate": "2025-07-22T08:29:35.948Z"
+    }
+  ]
+}
