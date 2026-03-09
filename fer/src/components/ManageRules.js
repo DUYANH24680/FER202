@@ -22,7 +22,7 @@ function ManageRules() {
     const fetchRules = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('http://localhost:5000/settings/1');
+            const res = await axios.get('http://localhost:9999/settings/1');
             setRules(res.data);
         } catch (err) {
             console.error("Lỗi khi tải quy định:", err);
@@ -46,7 +46,7 @@ function ManageRules() {
         setMessage({ type: '', text: '' });
 
         try {
-            await axios.put('http://localhost:5000/settings/1', rules);
+            await axios.put('http://localhost:9999/settings/1', rules);
             setMessage({ type: 'success', text: 'Cập nhật quy định thành công!' });
         } catch (err) {
             console.error("Lỗi khi lưu quy định:", err);

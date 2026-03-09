@@ -14,10 +14,14 @@ function Login({ setAuth }) {
     setError('');
 
     try {
-      const response = await axios.get(`http://localhost:5000/users?username=${username}`);
+      const response = await axios.get(`http://localhost:9999/users?username=${username}`);
       const user = response.data[0];
       
       if (user && user.password === password) {
+        if (user.locked) {
+          setError('Your account has been locked.');
+          return;
+        }
         setAuth(user);
         localStorage.setItem('user', JSON.stringify(user));
         navigate(user.role === 'admin' ? '/admin/books' : '/user/books');

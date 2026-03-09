@@ -14,6 +14,8 @@ import Register from "./components/Register";
 import Login from "./components/Login";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import ManageRules from "./components/ManageRules";
+import ManageLateBorrows from "./components/ManageLateBorrows";
+import ManageUser from "./components/ManageUser";
 
 function App() {
   const [auth, setAuth] = useState(null);
@@ -60,6 +62,9 @@ function App() {
                   </Nav.Link>
                   <Nav.Link as={Link} to="/admin/managerule">
                     Manage Rule
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/admin/late-borrows">
+                    ⚠ Late Returns
                   </Nav.Link>
                   <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
                 </>
@@ -112,18 +117,31 @@ function App() {
               <ProtectedRoute auth={auth} allowedRole="admin"></ProtectedRoute>
             }
           />
-          <Route
-            path="/admin/userlist"
-            element={
-              <ProtectedRoute auth={auth} allowedRole="admin"></ProtectedRoute>
-            }
-          />
+          
 
           <Route
             path="/admin/managerule"
             element={
               <ProtectedRoute auth={auth} allowedRole="admin">
                 <ManageRules />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/late-borrows"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="admin">
+                <ManageLateBorrows />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/userlist"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="admin">
+                <ManageUser />
               </ProtectedRoute>
             }
           />
