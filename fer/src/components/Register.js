@@ -15,14 +15,14 @@ function Register() {
 
     try {
       // Check if username already exists
-      const existingUser = await axios.get(`http://localhost:5000/users?username=${username}`);
+      const existingUser = await axios.get(`http://localhost:9999/users?username=${username}`);
       if (existingUser.data.length > 0) {
         setError('Username already exists. Please choose a different username.');
         return;
       }
 
       // Get all users to determine the next ID
-      const allUsers = await axios.get('http://localhost:5000/users');
+      const allUsers = await axios.get('http://localhost:9999/users');
       const nextId = allUsers.data.length > 0 
         ? Math.max(...allUsers.data.map(user => Number(user.id))) + 1 
         : 1;
@@ -35,7 +35,7 @@ function Register() {
         role: 'user'
       };
 
-      await axios.post('http://localhost:5000/users', newUser);
+      await axios.post('http://localhost:9999/users', newUser);
       alert('Registration successful! Please log in.');
       navigate('/login');
     } catch (error) {
