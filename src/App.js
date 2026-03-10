@@ -15,7 +15,7 @@ import AdminSearchPro from './components/AdminSearchPro';
 import AdminBookStatus from './components/AdminBookStatus';
 import AdminImport from './components/AdminImport';
 import AdminInventoryReport from './components/AdminInventoryReport';
-
+import CategoryBooks from "./components/CategoryBooks";
 import { ProtectedRoute } from './utils/ProtectedRoute';
 
 function App() {
@@ -199,6 +199,14 @@ path="/staff/book-status"
                             </ProtectedRoute>
                         }
                     /> }
+                    <Route
+  path="/category/:id"
+  element={
+    <ProtectedRoute auth={auth} allowedRole="staff">
+      <CategoryBooks />
+    </ProtectedRoute>
+  }
+/>
 
                 </Routes>
             </Container>
