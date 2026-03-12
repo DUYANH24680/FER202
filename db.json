@@ -126,6 +126,21 @@
       "seriesId": "1",
       "statusDate": null,
       "comment": "Quyển số 2 cùng tập 2"
+    },
+        {
+      "id": "5",
+      "series": "Doraemon",
+      "title": "Doraemon truyện ngắn - Tập 2",
+      "author": "Fujiko Fujio",
+      "description": "Những câu chuyện Doraemon",
+      "available": false,
+      "image": "https://product.hstatic.net/200000343865/product/2_59a0dfb7…ba247935d05c25f4_5d3df2542dbb4590878619ea9d3906b3_master.jpg",
+      "barcode": "DRM-KN-02-03",
+      "status": null,
+      "categoryId": "1",
+      "seriesId": "1",
+      "statusDate": null,
+      "comment": "Quyển số 2 cùng tập 2"
     }
   ],
   "borrows": [
