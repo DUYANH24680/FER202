@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Button } from 'react-bootstrap';
 
-function BorrowRequests() {
+export default function StaffBorrowRequests({ auth }) {
   const [requests, setRequests] = useState([]);
   const [books, setBooks] = useState([]); // State for books
 
@@ -14,12 +14,34 @@ function BorrowRequests() {
     axios.get('http://localhost:9999/books').then((res) => setBooks(res.data));
   }, []);
 
-  const handleApprove = (id) => {
-    // Code to handle approval of borrow requests
-    axios.patch(`http://localhost:9999/borrows/${id}`, { status: 'approved' })
-      .then(() => setRequests(requests.map(request => 
-        request.id === id ? { ...request, status: 'approved' } : request
-      )));
+  const handleApprove = async (id) => {
+    try {
+      // Find the request and the associated book
+      const request = requests.find(r => r.id === id);
+      if (!request) return;
+
+      // 1. Approve the borrow request
+      await axios.patch(`http://localhost:9999/borrows/${id}`, { status: 'approved' });
+
+      // 2. Update the book's status to borrowed
+      await axios.patch(`http://localhost:9999/books/${request.bookId}`, {
+        available: false,
+        status: 'borrowed',
+        statusDate: new Date().toISOString()
+      });
+
+      // Update local state for requests
+      setRequests(requests.map(req => 
+        req.id === id ? { ...req, status: 'approved' } : req
+      ));
+
+      // Refresh the local books list so the UI reflects the change (optional but good practice)
+      const res = await axios.get('http://localhost:9999/books');
+      setBooks(res.data);
+      
+    } catch (err) {
+      console.error("Failed to approve request and update book:", err);
+    }
   };
 
   const handleReject = (id) => {
@@ -69,5 +91,3 @@ function BorrowRequests() {
     </div>
   );
 }
-
-export default BorrowRequests;

@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Card, Button, Alert } from 'react-bootstrap';
 
-function BookDetails({ auth }) {
+function UserBookDetails({ auth }) {
     const { id } = useParams();
     const [book, setBook] = useState(null);
     const [message, setMessage] = useState('');
@@ -93,4 +93,4 @@ function BookDetails({ auth }) {
     );
 }
 
-export default BookDetails;
+export default UserBookDetails;
