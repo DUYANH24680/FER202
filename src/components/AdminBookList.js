@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Row, Col, Card, Button, Form, Modal, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, ListGroup, Modal } from 'react-bootstrap';
 
 const API = "http://localhost:9999";
 
 function AdminBookList() {
     const [books, setBooks] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [filteredBooks, setFilteredBooks] = useState([]);
-    const [selectedBook, setSelectedBook] = useState(null);
-    
-    // Search & Filter States
+    const [filteredGroups, setFilteredGroups] = useState([]);
+    const [selectedGroup, setSelectedGroup] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCat, setSelectedCat] = useState("");
-    
-    // Edit States
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editData, setEditData] = useState({});
-    
+    const [barcodeSearch, setBarcodeSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editData, setEditData] = useState({});
 
     useEffect(() => {
         fetchData();
@@ -33,57 +30,83 @@ function AdminBookList() {
                 axios.get(`${API}/categories`)
             ]);
             setBooks(resBooks.data);
-            setFilteredBooks(resBooks.data);
             setCategories(resCats.data);
         } catch (err) {
-            setError('Failed to load data from server');
+            setError('Failed to load data');
         } finally {
             setLoading(false);
         }
     };
 
-    // Logic: Search by Series, Title, Barcode AND Filter by Category
     useEffect(() => {
-        const filtered = books.filter(b => {
-            const matchesSearch = 
-                b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                b.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                b.barcode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                b.series?.toLowerCase().includes(searchTerm.toLowerCase());
-            
-            const matchesCat = selectedCat === "" || Number(b.categoryId) === Number(selectedCat);
-            
+        const groups = books.reduce((acc, book) => {
+            const title = book.title;
+            if (!acc[title]) {
+                acc[title] = { ...book, quantity: 0, inventory: [] };
+            }
+            acc[title].quantity += 1;
+            // Added 'status' to each inventory item
+            acc[title].inventory.push({ 
+                id: book.id, 
+                barcode: book.barcode, 
+                available: book.available,
+                status: book.status || "Good" 
+            });
+            return acc;
+        }, {});
+
+        const groupedArray = Object.values(groups).filter(group => {
+            const matchesSearch = group.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                 group.author.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesCat = selectedCat === "" || Number(group.categoryId) === Number(selectedCat);
             return matchesSearch && matchesCat;
         });
-        setFilteredBooks(filtered);
+        setFilteredGroups(groupedArray);
     }, [searchTerm, selectedCat, books]);
 
-    const handleOpenEdit = () => {
-        setEditData(selectedBook);
-        setShowEditModal(true);
+    const toggleStatus = async (item) => {
+        try {
+            await axios.patch(`${API}/books/${item.id}`, { available: !item.available });
+            await fetchData();
+            const updatedGroup = filteredGroups.find(g => g.title === selectedGroup.title);
+            setSelectedGroup(updatedGroup);
+        } catch (err) { setError('Update failed'); }
+    };
+
+    const handleDeleteItem = async (id) => {
+        if (window.confirm("Delete this barcode copy?")) {
+            try {
+                await axios.delete(`${API}/books/${id}`);
+                await fetchData();
+                setSelectedGroup(null);
+            } catch (err) { setError('Delete failed'); }
+        }
+    };
+
+    const handleDeleteGroup = async (title) => {
+        if (window.confirm(`Delete all copies of "${title}"?`)) {
+            try {
+                const targets = books.filter(b => b.title === title);
+                await Promise.all(targets.map(b => axios.delete(`${API}/books/${b.id}`)));
+                setSelectedGroup(null);
+                fetchData();
+            } catch (err) { setError('Delete failed'); }
+        }
     };
 
     const handleSaveEdit = async () => {
         try {
-            await axios.put(`${API}/books/${editData.id}`, editData);
+            const targets = books.filter(b => b.title === selectedGroup.title);
+            await Promise.all(targets.map(b => axios.patch(`${API}/books/${b.id}`, {
+                series: editData.series,
+                author: editData.author,
+                description: editData.description,
+                categoryId: editData.categoryId
+            })));
             setShowEditModal(false);
-            setSelectedBook(editData); // Update Detail view immediately
-            fetchData(); // Refresh main list
-        } catch (err) {
-            setError('Update failed');
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm(`Are you sure you want to delete book with Barcode: ${selectedBook.barcode}?`)) {
-            try {
-                await axios.delete(`${API}/books/${id}`);
-                setSelectedBook(null); // Exit detail view
-                fetchData();
-            } catch (err) {
-                setError('Delete failed');
-            }
-        }
+            setSelectedGroup(null);
+            fetchData();
+        } catch (err) { setError('Update failed'); }
     };
 
     if (loading) return <Container className="text-center mt-5"><Spinner animation="border" /></Container>;
@@ -93,37 +116,25 @@ function AdminBookList() {
             <h2 className="mb-4">Manage Books</h2>
             {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
-            {!selectedBook ? (
-                /* GRID VIEW LISTING */
+            {!selectedGroup ? (
                 <>
                     <Row className="mb-4">
-                        <Col md={7}>
-                            <Form.Control 
-                                placeholder="Search by Series, Title, or Barcode..." 
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </Col>
-                        <Col md={5}>
-                            <Form.Select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}>
-                                <option value="">All Categories</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </Form.Select>
-                        </Col>
+                        <Col md={7}><Form.Control placeholder="Search by title or author..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></Col>
+                        <Col md={5}><Form.Select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}>
+                            <option value="">All Categories</option>
+                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </Form.Select></Col>
                     </Row>
                     <Row>
-                        {filteredBooks.map((book) => (
-                            <Col md={3} key={book.id} className="mb-4 d-flex">
-                                <Card className="w-100 shadow-sm border-0 h-100 card-hover" style={{ cursor: "pointer" }} onClick={() => setSelectedBook(book)}>
-                                    <Card.Img variant="top" src={book.image} style={{ height: "260px", objectFit: "cover" }} />
+                        {filteredGroups.map(group => (
+                            <Col md={3} key={group.title} className="mb-4">
+                                <Card className="h-100 shadow-sm border-0" onClick={() => setSelectedGroup(group)} style={{cursor:'pointer'}}>
+                                    <Card.Img variant="top" src={group.image} style={{height:'260px', objectFit:'cover'}} />
                                     <Card.Body>
-                                        <Card.Title style={{ fontSize: "15px", fontWeight: "600", height: "40px", overflow: "hidden" }}>{book.title}</Card.Title>
-                                        <Card.Text className="text-muted small mb-1">{book.author}</Card.Text>
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <code className="small text-primary">{book.barcode}</code>
-                                            <Badge bg={book.available ? "success" : "secondary"}>
-                                                {book.available ? "Available" : "Borrowed"}
-                                            </Badge>
+                                        <Card.Title className="small fw-bold">{group.title}</Card.Title>
+                                        <div className="d-flex justify-content-between align-items-center mt-3">
+                                            <span className="small text-muted">Qty: <strong>{group.quantity}</strong></span>
+                                            <Badge bg="info">Details</Badge>
                                         </div>
                                     </Card.Body>
                                 </Card>
@@ -132,86 +143,70 @@ function AdminBookList() {
                     </Row>
                 </>
             ) : (
-                /* FULL DETAIL VIEW */
-                <Row className="align-items-start bg-white p-4 rounded shadow-sm border">
-                    <Col md={5}>
-                        <img src={selectedBook.image} alt={selectedBook.title} className="w-100 rounded shadow" style={{ maxHeight: '500px', objectFit: 'contain' }} />
-                    </Col>
-                    <Col md={7}>
-                        <Button variant="outline-secondary" className="float-end" onClick={() => setSelectedBook(null)}>Back to List</Button>
-                        <h3 className="mb-3 text-primary">{selectedBook.title}</h3>
-                        
-                        <Row className="mb-2">
-                            <Col xs={4}><strong>Series:</strong></Col>
-                            <Col>{selectedBook.series || "N/A"}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col xs={4}><strong>Author:</strong></Col>
-                            <Col>{selectedBook.author}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col xs={4}><strong>Barcode:</strong></Col>
-                            <Col><code className="bg-dark text-white px-2 py-1 rounded">{selectedBook.barcode}</code></Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col xs={4}><strong>Category:</strong></Col>
-                            <Col>{categories.find(c => Number(c.id) === Number(selectedBook.categoryId))?.name || "N/A"}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col xs={4}><strong>Status:</strong></Col>
-                            <Col>{selectedBook.status || "Good"}</Col>
-                        </Row>
-                        <Row className="mb-2">
-                            <Col xs={4}><strong>Description:</strong></Col>
-                            <Col>{selectedBook.description || "No description available."}</Col>
-                        </Row>
-                        <Row className="mb-3">
-                            <Col xs={4}><strong>Available:</strong></Col>
-                            <Col>{selectedBook.available ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}</Col>
-                        </Row>
-                        
-                        <div className="mt-4 border-top pt-3">
-                            <Button variant="warning" className="me-3 px-4 fw-bold" onClick={handleOpenEdit}>Edit Book</Button>
-                            <Button variant="danger" className="px-4 fw-bold" onClick={() => handleDelete(selectedBook.id)}>Delete Book</Button>
-                        </div>
-                    </Col>
-                </Row>
+                <div className="bg-white p-4 rounded shadow-sm border">
+                    <Row className="align-items-start">
+                        <Col md={4} className="text-center">
+                            <img src={selectedGroup.image} alt="book" className="w-100 rounded shadow mb-3" style={{maxHeight: '400px', objectFit: 'contain'}} />
+                            <Button variant="outline-secondary" className="w-100" onClick={() => setSelectedGroup(null)}>Back to List</Button>
+                        </Col>
+                        <Col md={8}>
+                            <h3 className="text-primary fw-bold">{selectedGroup.title}</h3>
+                            <p className="mb-2"><strong>Series:</strong> {selectedGroup.series || "N/A"} | <strong>Author:</strong> {selectedGroup.author}</p>
+                            <p className="mb-2"><strong>Category:</strong> {categories.find(c => Number(c.id) === Number(selectedGroup.categoryId))?.name || "N/A"}</p>
+                            
+                            {/* REMOVED GENERAL STATUS HERE */}
+
+                            <div className="bg-light p-3 rounded mb-3 border">
+                                <strong>Description:</strong>
+                                <p className="mb-0 small text-muted mt-1">{selectedGroup.description || "No description available."}</p>
+                            </div>
+                            
+                            <hr />
+                            
+                            <h5>Barcode List ({selectedGroup.quantity} copies)</h5>
+                            <Form.Control size="sm" placeholder="Find barcode..." className="mb-2" value={barcodeSearch} onChange={(e)=>setBarcodeSearch(e.target.value)} />
+                            <ListGroup style={{maxHeight:'180px', overflowY:'auto'}} className="mb-3 border">
+                                {selectedGroup.inventory.filter(i => i.barcode.toLowerCase().includes(barcodeSearch.toLowerCase())).map(item => (
+                                    <ListGroup.Item key={item.id} className="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <code className="text-danger fw-bold">{item.barcode}</code>
+                                            <small className="ms-3 text-muted">Status: {item.status}</small>
+                                        </div>
+                                        <div>
+                                            <Button variant={item.available ? "success" : "secondary"} size="sm" className="me-2 py-0 px-2" onClick={()=>toggleStatus(item)}>
+                                                {item.available ? "Available" : " Not Available"}
+                                            </Button>
+                                            <Button variant="link" className="text-danger p-0 text-decoration-none small" onClick={()=>handleDeleteItem(item.id)}>Delete</Button>
+                                        </div>
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                            
+                            <div className="d-flex gap-2">
+                                <Button variant="warning" className="fw-bold px-4" onClick={()=>{setEditData(selectedGroup); setShowEditModal(true)}}>Edit Group</Button>
+                                <Button variant="danger" className="fw-bold px-4" onClick={()=>handleDeleteGroup(selectedGroup.title)}>Delete Group</Button>
+                            </div>
+                        </Col>
+                    </Row>
+                </div>
             )}
 
-            {/* EDIT MODAL */}
-            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
-                <Modal.Header closeButton><Modal.Title>Edit Item: {selectedBook?.barcode}</Modal.Title></Modal.Header>
+            <Modal show={showEditModal} onHide={()=>setShowEditModal(false)} centered>
+                <Modal.Header closeButton><Modal.Title>Edit Group Information</Modal.Title></Modal.Header>
                 <Modal.Body>
-                    <Form>
-                        <Row className="mb-3">
-                            <Col md={6}>
-                                <Form.Label className="fw-bold">Series</Form.Label>
-                                <Form.Control value={editData.series || ''} onChange={(e) => setEditData({...editData, series: e.target.value})} />
-                            </Col>
-                            <Col md={6}>
-                                <Form.Label className="fw-bold">Barcode</Form.Label>
-                                <Form.Control value={editData.barcode || ''} onChange={(e) => setEditData({...editData, barcode: e.target.value})} />
-                            </Col>
-                        </Row>
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-bold">Title</Form.Label>
-                            <Form.Control value={editData.title || ''} onChange={(e) => setEditData({...editData, title: e.target.value})} />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-bold">Description</Form.Label>
-                            <Form.Control as="textarea" rows={3} value={editData.description || ''} onChange={(e) => setEditData({...editData, description: e.target.value})} />
-                        </Form.Group>
-                        <Form.Check 
-                            type="switch"
-                            id="available-switch"
-                            label="Available for Borrow" 
-                            checked={editData.available || false} 
-                            onChange={(e) => setEditData({...editData, available: e.target.checked})} 
-                        />
-                    </Form>
+                    <Form.Group className="mb-3"><Form.Label>Series</Form.Label><Form.Control value={editData.series || ''} onChange={(e)=>setEditData({...editData, series: e.target.value})} /></Form.Group>
+                    <Form.Group className="mb-3"><Form.Label>Author</Form.Label><Form.Control value={editData.author || ''} onChange={(e)=>setEditData({...editData, author: e.target.value})} /></Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Category</Form.Label>
+                        <Form.Select value={editData.categoryId || ''} onChange={(e)=>setEditData({...editData, categoryId: e.target.value})}>
+                            <option value="">Select Category</option>
+                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mb-3"><Form.Label>Description</Form.Label><Form.Control as="textarea" rows={4} value={editData.description || ''} onChange={(e)=>setEditData({...editData, description: e.target.value})} /></Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowEditModal(false)}>Close</Button>
+                    <Button variant="secondary" onClick={()=>setShowEditModal(false)}>Cancel</Button>
                     <Button variant="primary" onClick={handleSaveEdit}>Save Changes</Button>
                 </Modal.Footer>
             </Modal>

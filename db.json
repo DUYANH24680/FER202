@@ -127,7 +127,7 @@
       "statusDate": null,
       "comment": "Quyển số 2 cùng tập 2"
     },
-        {
+    {
       "id": "5",
       "series": "Doraemon",
       "title": "Doraemon truyện ngắn - Tập 2",
@@ -171,6 +171,13 @@
       "userId": "3",
       "status": "pending",
       "requestDate": "2026-03-10T16:43:14.249Z"
+    },
+    {
+      "id": "5",
+      "bookId": "3",
+      "userId": "3",
+      "status": "pending",
+      "requestDate": "2026-03-15T16:54:03.609Z"
     }
   ]
 }
