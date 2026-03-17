@@ -40,7 +40,7 @@ function BookDetails({ auth }) {
                 return;
             }
 
-            await axios.post('http://localhost:5000/borrows', {
+            await axios.post('http://localhost:9999/borrows', {
                 bookId: book.id,
                 userId: auth.id,
                 status: 'pending',

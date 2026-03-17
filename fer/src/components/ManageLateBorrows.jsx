@@ -39,76 +39,21 @@ function StatusCell({ row, onReturn }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const handleReturn = async () => {
-    setLoading(true);
-    setOpen(false);
-    try {
-      const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      await axios.patch(`${API}/borrows/${row.id}`, {
-        status: 'returned',
-        returnDate: now,
-      });
-      onReturn(); // reload
-    } catch (err) {
-      console.error('[handleReturn] failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  if (row.status !== 'approved') {
-    return (
-      <span
-        style={{
-          ...s.badge,
-          background: sc.bg,
-          color: sc.color,
-          border: `1px solid ${sc.border}`,
-        }}
-      >
-        {row.status === 'late'     && '⚠ Trễ'}
-        {row.status === 'returned' && '✓ Đã trả'}
-        {row.status === 'pending'  && '⌛ Chờ duyệt'}
-        {row.status === 'rejected' && '✕ Từ chối'}
-        {!['late','returned','approved','pending','rejected'].includes(row.status) && row.status}
-      </span>
-    );
-  }
 
-  // approved → hiển thị badge có thể click + dropdown
-  return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button
-        style={{
-          ...s.badge,
-          ...s.badgeBtn,
-          background: sc.bg,
-          color: sc.color,
-          border: `1px solid ${sc.border}`,
-          opacity: loading ? 0.6 : 1,
-          cursor: loading ? 'wait' : 'pointer',
-        }}
-        onClick={() => !loading && setOpen((v) => !v)}
-        title="Nhấn để cập nhật trạng thái"
-      >
-        {loading ? '⏳ Đang lưu...' : '● Đang mượn'}
-        {!loading && <span style={s.chevron}>{open ? '▲' : '▼'}</span>}
-      </button>
+  const labels = {
+  late:     '⚠ Trễ',
+  returned: '✓ Đã trả',
+  pending:  '⌛ Chờ duyệt',
+  rejected: '✕ Từ chối',
+  approved: 'Đang mượn',
+};
 
-      {open && (
-        <div style={s.dropdown}>
-          <div style={s.dropdownTitle}>Cập nhật trạng thái</div>
-          <button style={s.dropdownItem} onClick={handleReturn}>
-            <span style={s.dropdownIcon}>✓</span>
-            <span>
-              <strong>Đã trả</strong>
-              <div style={s.dropdownSub}>Ghi nhận ngày trả hôm nay</div>
-            </span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
+return (
+  <span style={{ ...s.badge, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+    {labels[row.status] ?? row.status}
+  </span>
+);
 }
 
 // ── component ─────────────────────────────────────────────────────────────────
