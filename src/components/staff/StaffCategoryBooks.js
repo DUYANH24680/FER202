@@ -260,12 +260,7 @@ function StaffCategoryBooks() {
                 </p>
                 
                 <div style={{ display: "flex", gap: "16px" }}>
-                  <button style={{ background: "#ea580c", color: "white", border: "none", borderRadius: "8px", padding: "12px 24px", fontWeight: "600", fontSize: "15px", cursor: "pointer" }}>
-                    Edit Book
-                  </button>
-                  <button style={{ background: "white", color: "#ef4444", border: "1px solid #f87171", borderRadius: "8px", padding: "12px 24px", fontWeight: "600", fontSize: "15px", cursor: "pointer" }}>
-                    Delete Book
-                  </button>
+                  
                 </div>
               </Col>
             </Row>

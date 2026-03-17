@@ -1,96 +1,82 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {  Button, Alert, Form } from 'react-bootstrap';
-import { FaBook, FaCheck } from 'react-icons/fa';
+import { Button, Alert, Form } from 'react-bootstrap';
+import { FaBook, FaCheck, FaTimesCircle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 function UserAvailableBooks({ auth }) {
     const [books, setBooks] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [message, setMessage] = useState('');
     const [borrowed, setBorrowed] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTitle, setSelectedTitle] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedAuthor, setSelectedAuthor] = useState('');
 
     useEffect(() => {
-        const fetchBooks = async () => {
-            const [booksRes, borrowsRes] = await Promise.all([
+        const fetchData = async () => {
+            const [booksRes, borrowsRes, catsRes] = await Promise.all([
                 axios.get('http://localhost:9999/books'),
-                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`)
+                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`),
+                axios.get('http://localhost:9999/categories')
             ]);
             setBooks(booksRes.data);
             setFilteredBooks(booksRes.data);
             setBorrowed(borrowsRes.data);
+            setCategories(catsRes.data);
         };
-        fetchBooks();
+        fetchData();
     }, [auth.id]);
 
-    const uniqueTitles = [...new Set(books.map(book => book.title))];
     const uniqueAuthors = [...new Set(books.map(book => book.author))];
 
     const handleSearch = (event) => {
         const query = event.target.value.toLowerCase();
         setSearchQuery(query);
-        filterBooks(query, selectedTitle, selectedAuthor);
+        filterBooks(query, selectedCategory, selectedAuthor);
     };
 
-    const handleTitleChange = (event) => {
-        const title = event.target.value;
-        setSelectedTitle(title);
-        filterBooks(searchQuery, title, selectedAuthor);
+    const handleCategoryChange = (event) => {
+        const catId = event.target.value;
+        setSelectedCategory(catId);
+        filterBooks(searchQuery, catId, selectedAuthor);
     };
 
     const handleAuthorChange = (event) => {
         const author = event.target.value;
         setSelectedAuthor(author);
-        filterBooks(searchQuery, selectedTitle, author);
+        filterBooks(searchQuery, selectedCategory, author);
     };
 
-    const filterBooks = (query, title, author) => {
+    const filterBooks = (query, catId, author) => {
         const filtered = books.filter(book => {
             const matchesQuery = book.title.toLowerCase().includes(query) ||
                 book.author.toLowerCase().includes(query);
-            const matchesTitle = title === '' || book.title === title;
+            const matchesCategory = catId === '' || book.categoryId === catId;
             const matchesAuthor = author === '' || book.author === author;
-            return matchesQuery && matchesTitle && matchesAuthor;
+            return matchesQuery && matchesCategory && matchesAuthor;
         });
         setFilteredBooks(filtered);
     };
 
     const handleRequestBorrow = async (e, bookId) => {
         e.preventDefault();
-        e.stopPropagation();
-
         try {
-            const existingBorrow = borrowed.find(b =>
-                b.bookId === bookId && ['pending', 'approved'].includes(b.status)
-            );
+            const res = await axios.get('http://localhost:9999/borrows');
+            const nextId = res.data.length > 0 ? Math.max(...res.data.map(b => Number(b.id))) + 1 : 1;
 
-            if (existingBorrow) {
-                setMessage('You already have a pending or approved request for this book');
-                return;
-            }
-
-            const allUsers = await axios.get('http://localhost:9999/borrows');
-            const nextId = allUsers.data.length > 0
-                ? Math.max(...allUsers.data.map(user => Number(user.id))) + 1
-                : 1;
-
-
-            const newUser = {
-                id: nextId,
+            const newBorrow = {
+                id: String(nextId),
                 bookId,
                 userId: auth.id,
                 status: 'pending',
                 requestDate: new Date().toISOString()
             };
 
-            await axios.post('http://localhost:9999/borrows', newUser);
-
+            await axios.post('http://localhost:9999/borrows', newBorrow);
             setMessage('Borrow request submitted successfully');
-
-
+            
             const borrowsRes = await axios.get(`http://localhost:9999/borrows?userId=${auth.id}`);
             setBorrowed(borrowsRes.data);
         } catch (error) {
@@ -98,40 +84,33 @@ function UserAvailableBooks({ auth }) {
         }
     };
 
-
     const BookCard = ({ book }) => {
-        const isRequested = borrowed.some(b =>
-            b.bookId === book.id && ['pending', 'approved'].includes(b.status)
-        );
+        const isRequested = borrowed.some(b => b.bookId === book.id && ['pending', 'approved'].includes(b.status));
+        const isAvailable = book.available === true;
+
+        let renderButton;
+        if (!isAvailable) {
+            renderButton = <Button variant="danger" disabled className="w-100"><FaTimesCircle /> Not Available</Button>;
+        } else if (isRequested) {
+            renderButton = <Button variant="secondary" disabled className="w-100"><FaCheck /> Already Requested</Button>;
+        } else {
+            renderButton = (
+                <Button variant="primary" className="w-100" onClick={(e) => handleRequestBorrow(e, book.id)}>
+                    <FaBook /> Request Borrow
+                </Button>
+            );
+        }
 
         return (
             <div className="col-md-3 mb-4">
-                <div className="card h-100 shadow-sm hover-shadow">
-                    {book.image && (
-                        <img
-                            className="card-img-top"
-                            src={book.image}
-                            alt={`Cover of ${book.title}`}
-                            style={{ height: '250px', objectFit: 'contain' }}
-                        />
-                    )}
-                    <div className="card-body" style={{ padding: '10px' }}>
-                        <Link
-                            to={`/user/books/${book.id}`}
-                            className="text-decoration-none"
-                        >
-                            <h5 className="card-title font-weight-bold" style={{ fontSize: '1.1rem' }}>{book.title}</h5>
-                            <p className="card-text" style={{ fontSize: '0.9rem' }}>{book.author}</p>
+                <div className="card h-100 shadow-sm">
+                    {book.image && <img className="card-img-top" src={book.image} alt={book.title} style={{ height: '250px', objectFit: 'contain' }} />}
+                    <div className="card-body">
+                        <Link to={`/user/books/${book.id}`} className="text-decoration-none text-dark">
+                            <h5 className="card-title" style={{ fontSize: '1rem' }}>{book.title}</h5>
+                            <p className="text-muted" style={{ fontSize: '0.8rem' }}>{book.author}</p>
                         </Link>
-                        <Button
-                            onClick={(e) => handleRequestBorrow(e, book.id)}
-                            disabled={isRequested}
-                            variant={isRequested ? "secondary" : "primary"}
-                            className="w-100"
-                            style={{ transition: 'background-color 0.3s' }}
-                        >
-                            {isRequested ? <><FaCheck /> Already Requested</> : <><FaBook /> Request Borrow</>}
-                        </Button>
+                        {renderButton}
                     </div>
                 </div>
             </div>
@@ -141,69 +120,28 @@ function UserAvailableBooks({ auth }) {
     return (
         <div className="container mt-4">
             <h2 className="mb-4 text-center">Available Books</h2>
-
             <div className="row">
-                {/* Filter Section */}
                 <div className="col-md-3">
-                    <Form className="mb-4">
-                        <Form.Group controlId="search">
-                            <Form.Control
-                                type="text"
-                                placeholder="Search by title or author"
-                                value={searchQuery}
-                                onChange={handleSearch}
-                            />
-                        </Form.Group>
-                    </Form>
-
+                    <Form.Control type="text" placeholder="Search..." className="mb-3" value={searchQuery} onChange={handleSearch} />
                     <Form.Group className="mb-3">
-                        <Form.Label>Filter by Title:</Form.Label>
-                        <Form.Select value={selectedTitle} onChange={handleTitleChange}>
-                            <option value="">All Titles</option>
-                            {uniqueTitles.map((title, index) => (
-                                <option key={index} value={title}>{title}</option>
-                            ))}
+                        <Form.Label>Filter by Categories:</Form.Label>
+                        <Form.Select value={selectedCategory} onChange={handleCategoryChange}>
+                            <option value="">All Categories</option>
+                            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </Form.Select>
                     </Form.Group>
-
-                    <Form.Group className="mb-3">
+                    <Form.Group>
                         <Form.Label>Filter by Author:</Form.Label>
-                        <Form.Check
-                            type="radio"
-                            label="All Authors"
-                            value=""
-                            checked={selectedAuthor === ''}
-                            onChange={handleAuthorChange}
-                        />
-                        {uniqueAuthors.map((author, index) => (
-                            <Form.Check
-                                key={index}
-                                type="radio"
-                                label={author}
-                                value={author}
-                                checked={selectedAuthor === author}
-                                onChange={handleAuthorChange}
-                            />
-                        ))}
+                        <Form.Check type="radio" label="All Authors" checked={selectedAuthor === ''} onChange={() => handleAuthorChange({target: {value: ''}})} />
+                        {uniqueAuthors.map((a, i) => <Form.Check key={i} type="radio" label={a} checked={selectedAuthor === a} onChange={() => handleAuthorChange({target: {value: a}})} />)}
                     </Form.Group>
                 </div>
-
-                {/* Book List Section */}
                 <div className="col-md-9">
-                    {message &&
-                        <Alert variant="info" onClose={() => setMessage('')} dismissible>
-                            {message}
-                        </Alert>
-                    }
-                    <div className="row">
-                        {filteredBooks.map(book => (
-                            <BookCard key={book.id} book={book} />
-                        ))}
-                    </div>
+                    {message && <Alert variant="info" dismissible onClose={() => setMessage('')}>{message}</Alert>}
+                    <div className="row">{filteredBooks.map(book => <BookCard key={book.id} book={book} />)}</div>
                 </div>
             </div>
         </div>
     );
 }
-
 export default UserAvailableBooks;
