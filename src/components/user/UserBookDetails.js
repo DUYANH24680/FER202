@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Card, Button, Alert } from 'react-bootstrap';
 
-function BookDetails({ auth }) {
+function UserBookDetails({ auth }) {
     const { id } = useParams();
     const [book, setBook] = useState(null);
     const [message, setMessage] = useState('');
@@ -13,7 +13,7 @@ function BookDetails({ auth }) {
     useEffect(() => {
         const fetchBookDetails = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/books/${id}`);
+                const res = await axios.get(`http://localhost:9999/books/${id}`);
                 setBook(res.data);
             } catch (error) {
                 setMessage('Failed to load book details');
@@ -21,7 +21,7 @@ function BookDetails({ auth }) {
         };
 
         const fetchBorrowedBooks = async () => {
-            const res = await axios.get(`http://localhost:5000/borrows?userId=${auth.id}`);
+            const res = await axios.get(`http://localhost:9999/borrows?userId=${auth.id}`);
             setBorrowed(res.data);
         };
 
@@ -40,7 +40,7 @@ function BookDetails({ auth }) {
                 return;
             }
 
-            await axios.post('http://localhost:5000/borrows', {
+            await axios.post('http://localhost:9999/borrows', {
                 bookId: book.id,
                 userId: auth.id,
                 status: 'pending',
@@ -93,4 +93,4 @@ function BookDetails({ auth }) {
     );
 }
 
-export default BookDetails;
+export default UserBookDetails;
