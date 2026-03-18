@@ -12,16 +12,19 @@ function UserAvailableBooks({ auth }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTitle, setSelectedTitle] = useState('');
     const [selectedAuthor, setSelectedAuthor] = useState('');
+     const [wishlist, setWishlist] = useState([]);
 
     useEffect(() => {
         const fetchBooks = async () => {
-            const [booksRes, borrowsRes] = await Promise.all([
+            const [booksRes, borrowsRes, wishlistRes] = await Promise.all([
                 axios.get('http://localhost:9999/books'),
-                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`)
+                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`),
+                axios.get(`http://localhost:9999/wishlists?userId=${auth.id}`)
             ]);
             setBooks(booksRes.data);
             setFilteredBooks(booksRes.data);
             setBorrowed(borrowsRes.data);
+            setWishlist(wishlistRes.data);
         };
         fetchBooks();
     }, [auth.id]);
@@ -98,11 +101,51 @@ function UserAvailableBooks({ auth }) {
         }
     };
 
+    const handleAddWishlist = async (e, bookId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+
+        const existed = wishlist.find(w => w.bookId === bookId);
+
+        if (existed) {
+            setMessage("Book already in wishlist ❤️");
+            return;
+        }
+
+        const res = await axios.get("http://localhost:9999/wishlists");
+
+        const nextId = res.data.length > 0
+            ? Math.max(...res.data.map(w => Number(w.id))) + 1
+            : 1;
+
+        const newWishlist = {
+            id: nextId,
+            userId: auth.id,
+            bookId: bookId,
+            createdAt: new Date().toISOString()
+        };
+
+        await axios.post("http://localhost:9999/wishlists", newWishlist);
+
+        setMessage("Added to wishlist ❤️");
+
+        const wishlistRes = await axios.get(`http://localhost:9999/wishlists?userId=${auth.id}`);
+        setWishlist(wishlistRes.data);
+
+    } catch (error) {
+        setMessage("Failed to add wishlist");
+    }
+};
+
 
     const BookCard = ({ book }) => {
         const isRequested = borrowed.some(b =>
             b.bookId === book.id && ['pending', 'approved'].includes(b.status)
         );
+        
+        const isFavorite = wishlist.some(w => w.bookId === book.id);
 
         return (
             <div className="col-md-3 mb-4">
@@ -131,6 +174,15 @@ function UserAvailableBooks({ auth }) {
                             style={{ transition: 'background-color 0.3s' }}
                         >
                             {isRequested ? <><FaCheck /> Already Requested</> : <><FaBook /> Request Borrow</>}
+                        </Button>
+
+                        <Button
+                            onClick={(e) => handleAddWishlist(e, book.id)}
+                            disabled={isFavorite}
+                            variant={isFavorite ? "danger" : "outline-danger"}
+                            className="w-100 mt-2"
+                        >
+                           {isFavorite ? "❤️ In Wishlist" : "🤍 Add to Wishlist"}
                         </Button>
                     </div>
                 </div>
