@@ -4,12 +4,14 @@ import { Form, Button, Card, Alert, Spinner, InputGroup } from 'react-bootstrap'
 import { FaSave, FaRedo, FaInfoCircle } from 'react-icons/fa';
 
 function ManageRules() {
-    const [rules, setRules] = useState({
+    const defaultRules = {
         id: 1,
         maxBorrowDays: 14,
         maxBooksPerUser: 3,
         finePerDay: 5000
-    });
+    };
+
+    const [rules, setRules] = useState(defaultRules);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -23,13 +25,21 @@ function ManageRules() {
         setLoading(true);
         try {
             const res = await axios.get('http://localhost:9999/settings/1');
-            setRules(res.data);
+            if (res.data) {
+                setRules(res.data);
+            }
         } catch (err) {
             console.error("Lỗi khi tải quy định:", err);
-            setMessage({ type: 'danger', text: 'Không thể tải quy định từ máy chủ.' });
+            setMessage({ type: 'danger', text: 'Không thể tải quy định từ máy chủ. Đang sử dụng thiết lập mặc định.' });
+            setRules(defaultRules);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleReset = () => {
+        setRules(defaultRules);
+        setMessage({ type: 'info', text: 'Đã đặt lại về quy định mặc định. Nhấn Lưu để áp dụng.' });
     };
 
     const handleChange = (e) => {
@@ -142,8 +152,8 @@ function ManageRules() {
                                 <hr />
 
                                 <div className="d-flex justify-content-between">
-                                    <Button variant="outline-secondary" onClick={fetchRules} disabled={saving}>
-                                        <FaRedo /> Hoàn tác
+                                    <Button variant="outline-secondary" onClick={handleReset} disabled={saving}>
+                                        <FaRedo /> Mặc định
                                     </Button>
                                     <Button variant="primary" type="submit" disabled={saving}>
                                         {saving ? <Spinner size="sm" animation="border" /> : <><FaSave /> Lưu thay đổi</>}

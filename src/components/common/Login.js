@@ -25,6 +25,10 @@ function Login({ setAuth }) {
       const user = response.data[0];
 
       if (user && user.password === password) {
+        if (user.locked) {
+          setError("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+          return;
+        }
 
         setAuth(user);
         localStorage.setItem("user", JSON.stringify(user));

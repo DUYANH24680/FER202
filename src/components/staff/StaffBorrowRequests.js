@@ -1,92 +1,237 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button } from 'react-bootstrap';
+import { Table, Button, Badge, Form } from 'react-bootstrap';
 
-export default function StaffBorrowRequests({ auth }) {
+export default function StaffBorrowRequests() {
+
   const [requests, setRequests] = useState([]);
-  const [books, setBooks] = useState([]); // State for books
+  const [books, setBooks] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [timeType, setTimeType] = useState("request");
 
-  useEffect(() => {
-    // Fetch borrow requests from the JSON Server
-    axios.get('http://localhost:9999/borrows').then((res) => setRequests(res.data));
-    
-    // Fetch books data
-    axios.get('http://localhost:9999/books').then((res) => setBooks(res.data));
-  }, []);
+  const API = "http://localhost:9999";
 
-  const handleApprove = async (id) => {
+  /* ---------- LOAD DATA ---------- */
+
+  const loadData = async () => {
     try {
-      // Find the request and the associated book
-      const request = requests.find(r => r.id === id);
-      if (!request) return;
+      const [borrowRes, bookRes, userRes] = await Promise.all([
+        axios.get(`${API}/borrows`),
+        axios.get(`${API}/books`),
+        axios.get(`${API}/users`)
+      ]);
 
-      // 1. Approve the borrow request
-      await axios.patch(`http://localhost:9999/borrows/${id}`, { status: 'approved' });
+      const sorted = borrowRes.data.sort(
+        (a, b) => new Date(b.requestDate || 0) - new Date(a.requestDate || 0)
+      );
 
-      // 2. Update the book's status to borrowed
-      await axios.patch(`http://localhost:9999/books/${request.bookId}`, {
-        available: false,
-        status: 'borrowed',
-        statusDate: new Date().toISOString()
-      });
+      setRequests(sorted);
+      setBooks(bookRes.data || []);
+      setUsers(userRes.data || []);
 
-      // Update local state for requests
-      setRequests(requests.map(req => 
-        req.id === id ? { ...req, status: 'approved' } : req
-      ));
-
-      // Refresh the local books list so the UI reflects the change (optional but good practice)
-      const res = await axios.get('http://localhost:9999/books');
-      setBooks(res.data);
-      
     } catch (err) {
-      console.error("Failed to approve request and update book:", err);
+      console.error(err);
     }
   };
 
-  const handleReject = (id) => {
-    // Code to handle rejection of borrow requests
-    axios.patch(`http://localhost:9999/borrows/${id}`, { status: 'rejected' })
-      .then(() => setRequests(requests.map(request => 
-        request.id === id ? { ...request, status: 'rejected' } : request
-      )));
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  /* ---------- SAFE COMPARE ---------- */
+
+  const isSame = (a, b) => String(a) === String(b);
+
+  /* ---------- FORMAT DATE ---------- */
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleString();
   };
 
-  const getBookName = (bookId) => {
-    const book = books.find(book => book.id === bookId);
-    return book ? book.title : 'Book not found'; // Return book title or 'Book not found'
+  /* ---------- TIME ---------- */
+
+  const getTime = (req) => {
+    if (timeType === "request") return req.requestDate;
+    if (timeType === "approved" && req.status === "approved") return req.requestDate;
+    if (timeType === "rejected" && req.status === "rejected") return req.requestDate;
+    if (timeType === "returned") return req.returnDate;
+    return null;
   };
 
-  
+  /* ---------- USER ---------- */
+
+  const getUser = (userId) => {
+    return users.find(u => isSame(u.id, userId));
+  };
+
+  /* ---------- BOOK ---------- */
+
+  const getBook = (bookId) => {
+    return books.find(b => isSame(b.id, bookId));
+  };
+
+  /* ---------- STATUS UI ---------- */
+
+  const renderStatus = (status) => {
+    const map = {
+      pending: "warning",
+      approved: "success",
+      rejected: "danger",
+      returned: "primary"
+    };
+    return <Badge bg={map[status] || "secondary"}>{status}</Badge>;
+  };
+
+  /* ---------- CHECK BOOK BORROWED ---------- */
+
+  const isBookBeingBorrowed = (bookId) => {
+    return requests.some(r =>
+      isSame(r.bookId, bookId) &&
+      r.status === "approved"
+    );
+  };
+
+  /* ---------- APPROVE (FIX ID) ---------- */
+
+  const handleApprove = async (req) => {
+    try {
+      if (isBookBeingBorrowed(req.bookId)) {
+        alert("Book already borrowed!");
+        return;
+      }
+
+      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
+        status: "approved"
+      });
+
+      await axios.patch(`${API}/books/${Number(req.bookId)}`, {
+        available: false
+      });
+
+      loadData();
+
+    } catch (err) {
+      console.error(err);
+      alert("Approve failed");
+    }
+  };
+
+  /* ---------- REJECT (FIX ID) ---------- */
+
+  const handleReject = async (req) => {
+    try {
+      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
+        status: "rejected"
+      });
+
+      loadData();
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* ---------- RETURN (FIX ID) ---------- */
+
+  const handleReturn = async (req) => {
+    try {
+      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
+        status: "returned",
+        returnDate: new Date().toISOString()
+      });
+
+      await axios.patch(`${API}/books/${Number(req.bookId)}`, {
+        available: true
+      });
+
+      loadData();
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* ---------- UI ---------- */
+
   return (
-    <div>
-      <h2>Borrow Requests</h2>
-      <Table striped bordered hover>
+    <div className="container mt-4">
+
+      <h2>Borrow Management</h2>
+
+      <Table bordered hover className="text-center align-middle">
+
         <thead>
           <tr>
-            <th>User ID</th>
-            <th>Book Title</th>
+            <th>User</th>
+            <th>Book</th>
             <th>Status</th>
-            <th>Actions</th>
+
+            <th>
+              Time
+              <Form.Select
+                size="sm"
+                value={timeType}
+                onChange={(e) => setTimeType(e.target.value)}
+              >
+                <option value="request">Request</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="returned">Returned</option>
+              </Form.Select>
+            </th>
+
+            <th>Action</th>
           </tr>
         </thead>
+
         <tbody>
-          {requests.map((request) => (
-            <tr key={request.id}>
-              <td>{request.userId}</td>
-              <td>{getBookName(request.bookId)}</td> {/* Display book title */}
-              <td>{request.status}</td>
-              <td>
-                {request.status === 'pending' && (
-                  <>
-                    <Button variant="success" onClick={() => handleApprove(request.id)}>Approve</Button>{' '}
-                    <Button variant="danger" onClick={() => handleReject(request.id)}>Reject</Button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
+
+          {requests.map((req) => {
+            const user = getUser(req.userId);
+            const book = getBook(req.bookId);
+
+            return (
+              <tr key={String(req.id)}>
+                <td>{user?.username || "Unknown"}</td>
+                <td>{book?.title || "Unknown Book"}</td>
+                <td>{renderStatus(req.status)}</td>
+                <td>{formatDate(getTime(req))}</td>
+
+                <td>
+                  {req.status === "pending" && (
+                    <>
+                      <Button
+                        variant="success"
+                        onClick={() => handleApprove(req)}
+                      >
+                        Approve
+                      </Button>{" "}
+
+                      <Button
+                        variant="danger"
+                        onClick={() => handleReject(req)}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+
+                  {req.status === "approved" && (
+                    <Button
+                      variant="primary"
+                      onClick={() => handleReturn(req)}
+                    >
+                      Return
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+
         </tbody>
+
       </Table>
     </div>
   );

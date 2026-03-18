@@ -1,129 +1,110 @@
-<<<<<<< HEAD:src/components/user/UserBorrowHistory.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table } from 'react-bootstrap';
+import { Table, Badge, Spinner } from 'react-bootstrap';
 
 export default function UserBorrowHistory({ auth }) {
   const [history, setHistory] = useState([]);
   const [books, setBooks] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [historyRes, booksRes] = await Promise.all([
-        axios.get(`http://localhost:9999/borrows?userId=${auth.id}`),
-        axios.get('http://localhost:9999/books')
-      ]);
-      
-      setHistory(historyRes.data);
-      setBooks(booksRes.data.reduce((acc, book) => {
-        acc[book.id] = book;
-        return acc;
-      }, {}));
+      try {
+        const [historyRes, booksRes] = await Promise.all([
+          axios.get(`http://localhost:9999/borrows?userId=${auth.id}`),
+          axios.get('http://localhost:9999/books')
+        ]);
+        
+        setHistory(historyRes.data);
+        setBooks(booksRes.data.reduce((acc, book) => {
+          acc[book.id] = book;
+          return acc;
+        }, {}));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     
     fetchData();
   }, [auth.id]);
 
   return (
-    <div className="container mt-4">
-      <h2>Borrowing History</h2>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>Book Title</th>
-            <th>Author</th>
-            <th>Status</th>
-            <th>Request Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {history.map(record => (
-            <tr key={record.id}>
-              <td>{books[record.bookId]?.title || 'Unknown'}</td>
-              <td>{books[record.bookId]?.author || 'Unknown'}</td>
-              <td>{record.status}</td>
-              <td>{new Date(record.requestDate).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
-  );
-}
-=======
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Table, Badge, Container } from 'react-bootstrap';
+    <div className="p-4 bg-transparent">
+        <div className="mb-4">
+            <h1 className="page-title mb-1">⏱️ Borrowing History</h1>
+            <p className="text-muted mb-0">Track your past and present book requests.</p>
+        </div>
 
-function BorrowHistory({ auth }) {
-    const [history, setHistory] = useState([]);
-    const [books, setBooks] = useState({});
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [historyRes, booksRes] = await Promise.all([
-                    axios.get(`http://localhost:9999/borrows?userId=${auth.id}`),
-                    axios.get('http://localhost:9999/books')
-                ]);
-                
-                setHistory(historyRes.data);
-                // Map books by ID for fast lookup
-                const bookMap = booksRes.data.reduce((acc, book) => {
-                    acc[book.id] = book;
-                    return acc;
-                }, {});
-                setBooks(bookMap);
-            } catch (error) {
-                console.error("Error loading data:", error);
-            }
-        };
-        fetchData();
-    }, [auth.id]);
-
-    return (
-        <Container className="mt-4">
-            <h2 className="mb-4">Borrowing History</h2>
-            <Table striped bordered hover responsive className="shadow-sm">
-                <thead className="table-dark">
+        <div className="card-premium border-0 shadow-sm overflow-hidden" style={{ background: "white" }}>
+            <Table hover responsive className="mb-0 overflow-hidden" style={{ borderCollapse: "separate", borderSpacing: "0" }}>
+                <thead style={{ background: "#f8fafc", borderBottom: "2px solid #f1f5f9" }}>
                     <tr>
-                        <th>Book Title</th>
-                        <th>Author</th>
-                        <th>Barcode</th>
-                        <th>Status</th>
-                        <th>Request Date</th>
+                        <th className="px-4 py-3 border-0">Book Details</th>
+                        <th className="px-4 py-3 border-0 text-center">Request Date</th>
+                        <th className="px-4 py-3 border-0 text-center">Return Date</th>
+                        <th className="px-4 py-3 border-0 text-end">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {history.length > 0 ? (
-                        history.map(record => {
-                            const bookInfo = books[record.bookId];
-                            return (
-                                <tr key={record.id}>
-                                    <td className="fw-bold">{bookInfo?.title || 'Unknown Title'}</td>
-                                    <td>{bookInfo?.author || 'N/A'}</td>
-                                    <td>
-                                        <code className="text-primary fw-bold">
-                                            {record.barcode || bookInfo?.barcode || 'N/A'}
-                                        </code>
-                                    </td>
-                                    <td>
-                                        <Badge bg={record.status === 'approved' ? 'success' : 'warning'} text={record.status === 'pending' ? 'dark' : ''}>
-                                            {record.status}
-                                        </Badge>
-                                    </td>
-                                    <td>{new Date(record.requestDate).toLocaleDateString()}</td>
-                                </tr>
-                            );
-                        })
+                    {loading ? (
+                        <tr>
+                            <td colSpan="4" className="text-center py-5">
+                                <Spinner animation="border" variant="primary" />
+                                <p className="mt-2 text-muted mb-0">Loading your history...</p>
+                            </td>
+                        </tr>
+                    ) : history.length === 0 ? (
+                        <tr>
+                            <td colSpan="4" className="text-center py-5 text-muted">
+                                📚 You haven't borrowed any books yet.
+                            </td>
+                        </tr>
                     ) : (
-                        <tr><td colSpan="5" className="text-center">No borrowing history found.</td></tr>
+                        history.map(record => (
+                            <tr key={record.id} style={{ verticalAlign: "middle" }}>
+                                <td className="px-4 py-4 border-0 border-bottom">
+                                    <div className="d-flex align-items-center gap-3">
+                                        <img 
+                                            src={books[record.bookId]?.image} 
+                                            alt="book" 
+                                            style={{ width: "45px", height: "65px", objectFit: "cover", borderRadius: "6px" }} 
+                                            onError={(e) => e.target.src = 'https://via.placeholder.com/45x65?text=Book'}
+                                        />
+                                        <div>
+                                            <span className="fw-bold d-block">{books[record.bookId]?.title || 'Unknown Book'}</span>
+                                            <small className="text-muted">{books[record.bookId]?.author || 'Unknown Author'}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-4 py-4 border-0 border-bottom text-center">
+                                    <span className="text-muted">{new Date(record.requestDate).toLocaleDateString('vi-VN')}</span>
+                                </td>
+                                <td className="px-4 py-4 border-0 border-bottom text-center">
+                                    <span className="text-muted">{record.returnDate ? new Date(record.returnDate).toLocaleDateString('vi-VN') : '—'}</span>
+                                </td>
+                                <td className="px-4 py-4 border-0 border-bottom text-end">
+                                    <Badge 
+                                        pill 
+                                        bg={record.status === 'approved' ? 'primary' : record.status === 'pending' ? 'warning' : record.status === 'returned' ? 'success' : 'secondary'}
+                                        className="px-3 py-2 text-uppercase"
+                                        style={{ fontSize: "10px", letterSpacing: "0.5px" }}
+                                    >
+                                        {record.status}
+                                    </Badge>
+                                </td>
+                            </tr>
+                        ))
                     )}
                 </tbody>
             </Table>
-        </Container>
-    );
+            {!loading && history.length > 0 && (
+                <div className="bg-light px-4 py-2 border-top small text-muted">
+                    Total records: <strong>{history.length}</strong>
+                </div>
+            )}
+        </div>
+    </div>
+  );
 }
-
-export default BorrowHistory;
->>>>>>> origin/ThanhDH:src/components/BorrowHistory.js

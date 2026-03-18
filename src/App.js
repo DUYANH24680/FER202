@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   BrowserRouter as Router,
@@ -13,7 +13,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import AdminBookList from "./components/admin/AdminBookList";
-import AdminUserList from "./components/admin/AdminUserList";
+
 import AdminCategories from "./components/admin/AdminCategories";
 import AdminImport from "./components/admin/AdminImport";
 import AdminInventoryReport from "./components/admin/AdminInventoryReport";
@@ -41,11 +41,7 @@ import { ProtectedRoute } from "./utils/ProtectedRoute";
 function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: "Staff/Admin", role: "staff", text: "Hello! How can we help you today?", time: new Date().toISOString(), isSystem: true }
-  ]);
+
   const [notifications, setNotifications] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -144,11 +140,11 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f8f6f6" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-color)" }}>
       {/* Sidebar */}
       <aside style={{
         width: "320px",
-        background: "#1e293b",
+        background: "var(--sidebar-bg)",
         color: "white",
         overflowY: "auto",
         position: "fixed",
@@ -156,31 +152,32 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
         left: 0,
         top: 0,
         zIndex: 1000,
-        borderRight: "1px solid #334155"
+        borderRight: "1px solid rgba(255,255,255,0.05)"
       }}>
         {/* Logo */}
         <div style={{
-          padding: "24px",
+          padding: "32px 24px",
           display: "flex",
           alignItems: "center",
-          gap: "12px",
-          borderBottom: "1px solid #334155"
+          gap: "16px",
+          borderBottom: "1px solid rgba(255,255,255,0.05)"
         }}>
           <div style={{
-            width: "56px",
-            height: "56px",
-            background: "#ec5b13",
-            borderRadius: "10px",
+            width: "50px",
+            height: "50px",
+            background: "var(--primary)",
+            borderRadius: "12px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "34px"
+            fontSize: "28px",
+            boxShadow: "0 0 20px rgba(236, 91, 19, 0.3)"
           }}>
             📚
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: "26px", fontWeight: "bold" }}>LibTrack</h2>
-            <p style={{ margin: "4px 0 0 0", fontSize: "15px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Library System</p>
+            <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", letterSpacing: "-0.5px" }}>LibTrack</h2>
+            <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", letterSpacing: "1px" }}>Workspace</p>
           </div>
         </div>
 
@@ -196,15 +193,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/books") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/books") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/books") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/books") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/books") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/books") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/books") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   📖 Manage Books
                 </Link>
@@ -217,15 +215,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/userlist") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/userlist") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/userlist") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/userlist") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/userlist") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/userlist") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/userlist") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   👥 User List
                 </Link>
@@ -233,15 +232,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   🏷️ Categories
                 </Link>
@@ -249,15 +249,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/managerule") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/managerule") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/managerule") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/managerule") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/managerule") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/managerule") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/managerule") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   📜 Manage Rule
                 </Link>
@@ -265,36 +266,38 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/late-borrows") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/late-borrows") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/late-borrows") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/late-borrows") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/late-borrows") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/late-borrows") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/late-borrows") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   ⚠ Late Returns
                 </Link>
               </div>
 
               {/* SYSTEM */}
-              <div style={{ paddingBottom: "20px", borderTop: "1px solid #334155", paddingTop: "20px" }}>
-                <p style={{ fontSize: "15px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "20px", letterSpacing: "0.5px" }}>System</p>
+              <div style={{ paddingBottom: "20px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "20px" }}>
+                <p style={{ fontSize: "14px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "32px", letterSpacing: "1px" }}>System</p>
                 <Link to="/admin/import" style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/import") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/import") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/import") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/import") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/import") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/import") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/import") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   📥 Import Data
                 </Link>
@@ -302,15 +305,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  padding: "18px 24px",
-                  color: isActive("/admin/inventory-report") ? "#ec5b13" : "#cbd5e1",
+                  padding: "16px 24px",
+                  color: isActive("/admin/inventory-report") ? "white" : "#94a3b8",
                   textDecoration: "none",
-                  background: isActive("/admin/inventory-report") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                  borderLeft: isActive("/admin/inventory-report") ? "4px solid #ec5b13" : "4px solid transparent",
-                  borderRadius: "0 8px 8px 0",
-                  fontSize: "18px",
+                  background: isActive("/admin/inventory-report") ? "var(--primary)" : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
                   fontWeight: isActive("/admin/inventory-report") ? "600" : "500",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/admin/inventory-report") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
                 }}>
                   📊 Reports
                 </Link>
@@ -321,21 +325,22 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
           {/* Staff Sections */}
           {(isStaffRoute || location.pathname.startsWith("/category")) && auth?.role === "staff" && (
             <div style={{ paddingBottom: "20px" }}>
-              <p style={{ fontSize: "15px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "20px", letterSpacing: "0.5px" }}>Operations</p>
+              <p style={{ fontSize: "14px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "32px", letterSpacing: "1px" }}>Operations</p>
 
               <Link to="/staff/book-status" style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "18px 24px",
-                color: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "#ec5b13" : "#cbd5e1",
+                padding: "16px 24px",
+                color: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "white" : "#94a3b8",
                 textDecoration: "none",
-                background: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                borderLeft: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "4px solid #ec5b13" : "4px solid transparent",
-                borderRadius: "0 8px 8px 0",
-                fontSize: "18px",
+                background: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "var(--primary)" : "transparent",
+                borderRadius: "12px",
+                margin: "0 16px",
+                fontSize: "16px",
                 fontWeight: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "600" : "500",
-                transition: "all 0.2s"
+                transition: "all 0.2s",
+                boxShadow: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
                 📊 Categories (Books)
               </Link>
@@ -344,14 +349,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "18px 24px",
-                color: isActive("/staff/requests") ? "#ec5b13" : "#cbd5e1",
+                padding: "16px 24px",
+                color: isActive("/staff/requests") ? "white" : "#94a3b8",
                 textDecoration: "none",
-                background: isActive("/staff/requests") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                borderLeft: isActive("/staff/requests") ? "4px solid #ec5b13" : "4px solid transparent",
-                borderRadius: "0 8px 8px 0",
-                fontSize: "18px",
-                transition: "all 0.2s"
+                background: isActive("/staff/requests") ? "var(--primary)" : "transparent",
+                borderRadius: "12px",
+                margin: "0 16px",
+                fontSize: "16px",
+                fontWeight: isActive("/staff/requests") ? "600" : "500",
+                transition: "all 0.2s",
+                boxShadow: isActive("/staff/requests") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
                 📋 Borrow Requests
               </Link>
@@ -359,14 +366,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "18px 24px",
-                color: isActive("/staff/search-pro") ? "#ec5b13" : "#cbd5e1",
+                padding: "16px 24px",
+                color: isActive("/staff/search-pro") ? "white" : "#94a3b8",
                 textDecoration: "none",
-                background: isActive("/staff/search-pro") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                borderLeft: isActive("/staff/search-pro") ? "4px solid #ec5b13" : "4px solid transparent",
-                borderRadius: "0 8px 8px 0",
-                fontSize: "18px",
-                transition: "all 0.2s"
+                background: isActive("/staff/search-pro") ? "var(--primary)" : "transparent",
+                borderRadius: "12px",
+                margin: "0 16px",
+                fontSize: "16px",
+                fontWeight: isActive("/staff/search-pro") ? "600" : "500",
+                transition: "all 0.2s",
+                boxShadow: isActive("/staff/search-pro") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
                 🔍 Search Pro
               </Link>
@@ -376,19 +385,21 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
           {/* User Sections */}
           {auth?.role === "user" && !isAdminRoute && !isStaffRoute && (
             <div style={{ paddingBottom: "20px" }}>
-              <p style={{ fontSize: "15px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "20px", letterSpacing: "0.5px" }}>My Library</p>
+              <p style={{ fontSize: "14px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "32px", letterSpacing: "1px" }}>My Library</p>
               <Link to="/user/books" style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "18px 24px",
-                color: isActive("/user/books") ? "#ec5b13" : "#cbd5e1",
+                padding: "16px 24px",
+                color: isActive("/user/books") ? "white" : "#94a3b8",
                 textDecoration: "none",
-                background: isActive("/user/books") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                borderLeft: isActive("/user/books") ? "4px solid #ec5b13" : "4px solid transparent",
-                borderRadius: "0 8px 8px 0",
-                fontSize: "18px",
-                transition: "all 0.2s"
+                background: isActive("/user/books") ? "var(--primary)" : "transparent",
+                borderRadius: "12px",
+                margin: "0 16px",
+                fontSize: "16px",
+                fontWeight: isActive("/user/books") ? "600" : "500",
+                transition: "all 0.2s",
+                boxShadow: isActive("/user/books") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
                 📚 Available Books
               </Link>
@@ -396,14 +407,16 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "18px 24px",
-                color: isActive("/user/history") ? "#ec5b13" : "#cbd5e1",
+                padding: "16px 24px",
+                color: isActive("/user/history") ? "white" : "#94a3b8",
                 textDecoration: "none",
-                background: isActive("/user/history") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                borderLeft: isActive("/user/history") ? "4px solid #ec5b13" : "4px solid transparent",
-                borderRadius: "0 8px 8px 0",
-                fontSize: "18px",
-                transition: "all 0.2s"
+                background: isActive("/user/history") ? "var(--primary)" : "transparent",
+                borderRadius: "12px",
+                margin: "0 16px",
+                fontSize: "16px",
+                fontWeight: isActive("/user/history") ? "600" : "500",
+                transition: "all 0.2s",
+                boxShadow: isActive("/user/history") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
                 ⏱️ My History
               </Link>
@@ -418,13 +431,13 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        background: "#f8f6f6"
+        background: "var(--bg-color)"
       }}>
         {/* Header */}
         <header style={{
           height: "76px",
-          background: "linear-gradient(90deg, #7c3aed 0%, #3b82f6 50%, #06b6d4 100%)",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          background: "var(--header-gradient)",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
@@ -643,15 +656,12 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
 
 function App() {
 
-  const [auth, setAuth] = useState(null);
+  const [auth, setAuth] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [openMenu, setOpenMenu] = useState(false);
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setAuth(JSON.parse(savedUser));
-    }
-  }, []);
 
   const handleLogout = () => {
     setAuth(null);
@@ -700,7 +710,7 @@ function App() {
             path="/admin/userlist"
             element={
               <ProtectedRoute auth={auth} allowedRole="admin">
-                <ManageUser />
+                <ManageUser auth={auth} handleLogout={handleLogout} />
               </ProtectedRoute>
             }
           />

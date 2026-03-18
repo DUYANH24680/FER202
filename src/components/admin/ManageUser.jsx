@@ -300,7 +300,7 @@ const avatarColor = (name) => {
   return colors[name?.charCodeAt(0) % colors.length] || colors[0];
 };
 
-export default function AdminUserList() {
+export default function AdminUserList({ auth, handleLogout }) {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -323,7 +323,7 @@ export default function AdminUserList() {
   };
 
   const filtered = users.filter((u) => {
-    const matchSearch = u.username.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = String(u.username || "").toLowerCase().includes(search.toLowerCase());
     const matchRole = roleFilter === "all" || u.role === roleFilter;
     const matchStatus =
       statusFilter === "all" ||
@@ -362,20 +362,37 @@ export default function AdminUserList() {
   };
 
   const handleDelete = async () => {
+    const isSelf = modal.user.id === auth?.id;
     setLoading(true);
     try {
       await axios.delete(`${API}/users/${modal.user.id}`);
-      showToast("✓ Đã xóa người dùng");
+      showToast(isSelf ? "✓ Đã xóa chính mình. Hệ thống đang đăng xuất..." : "✓ Đã xóa người dùng");
+      
+      if (isSelf && handleLogout) {
+          setTimeout(() => handleLogout(), 1000);
+      }
+      
       await fetchUsers();
       setModal(null);
+    } catch (err) {
+        console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   const toggleLock = async (user) => {
+    const isSelf = user.id === auth?.id;
     await axios.patch(`${API}/users/${user.id}`, { locked: !user.locked });
-    showToast(user.locked ? "✓ Đã mở khóa tài khoản" : "✓ Đã khóa tài khoản");
+    const msg = isSelf 
+        ? (user.locked ? "✓ Đã mở khóa. Hệ thống đang đăng xuất..." : "✓ Đã khóa tài khoản. Hệ thống đang đăng xuất...")
+        : (user.locked ? "✓ Đã mở khóa tài khoản" : "✓ Đã khóa tài khoản");
+    showToast(msg);
+    
+    if (isSelf && handleLogout) {
+        setTimeout(() => handleLogout(), 1000);
+    }
+    
     fetchUsers();
   };
 

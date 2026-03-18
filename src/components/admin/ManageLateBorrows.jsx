@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useLateBorrows } from './UseLateBorrows';
+import { Table, Badge, Button, Form, Row, Col, Spinner } from 'react-bootstrap';
 
 const API = 'http://localhost:9999';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (dateStr) =>
   dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : '—';
 
@@ -14,49 +14,6 @@ const daysLate = (dueDate, returnDate) => {
   return Math.max(0, Math.ceil(diff / 86400000));
 };
 
-const statusColor = {
-  late:     { bg: '#fff1f2', color: '#be123c', border: '#fecdd3' },
-  returned: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-  approved: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-  pending:  { bg: '#fefce8', color: '#a16207', border: '#fde68a' },
-  rejected: { bg: '#f5f5f4', color: '#78716c', border: '#e7e5e4' },
-};
-
-// ── StatusCell với dropdown cho approved ──────────────────────────────────────
-function StatusCell({ row, onReturn }) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const ref = useRef(null);
-  const sc = statusColor[row.status] || statusColor.rejected;
-
-  // Đóng dropdown khi click ra ngoài
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-
-
-  const labels = {
-  late:     '⚠ Trễ',
-  returned: '✓ Đã trả',
-  pending:  '⌛ Chờ duyệt',
-  rejected: '✕ Từ chối',
-  approved: 'Đang mượn',
-};
-
-return (
-  <span style={{ ...s.badge, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
-    {labels[row.status] ?? row.status}
-  </span>
-);
-}
-
-// ── component ─────────────────────────────────────────────────────────────────
 export default function ManageLateBorrows() {
   const [rows, setRows]         = useState([]);
   const [users, setUsers]       = useState({});
@@ -119,194 +76,165 @@ export default function ManageLateBorrows() {
   const lateCount = rows.filter((r) => r.status === 'late').length;
 
   return (
-    <div style={s.page}>
-      {/* ── Header ── */}
-      <div style={s.header}>
-        <div>
-          <div style={s.headerEye}>⚠ LATE RETURNS</div>
-          <h1 style={s.headerTitle}>Quản lý Trả Sách Muộn</h1>
-          <p style={s.headerSub}>
-            Theo dõi và xử lý các lượt mượn trả quá hạn. Phạt:{' '}
-            <strong>{settings.finePerDay.toLocaleString('vi-VN')}đ/ngày</strong>
-          </p>
+    <div className="p-4 bg-transparent">
+        <div className="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h1 className="page-title mb-1">⚠ Late Returns</h1>
+                <p className="text-muted mb-0">
+                    Fine rate: <strong className="text-primary">{settings.finePerDay.toLocaleString('vi-VN')}đ / day</strong>
+                </p>
+            </div>
+            <div className="d-flex gap-3">
+                <div className="text-end">
+                    <span className="small text-muted d-block fw-600 text-uppercase mb-1">Total Active Late</span>
+                    <h3 className="fw-bold text-danger mb-0">{lateCount}</h3>
+                </div>
+                <div style={{ width: "1px", height: "40px", background: "var(--border-color)" }}></div>
+                <div className="text-end">
+                    <span className="small text-muted d-block fw-600 text-uppercase mb-1">Current Fine Total</span>
+                    <h3 className="fw-bold text-warning mb-0">{totalFine.toLocaleString('vi-VN')}đ</h3>
+                </div>
+            </div>
         </div>
-        <div style={s.headerStats}>
-          <div style={s.bigStat}>
-            <span style={{ ...s.bigNum, color: '#be123c' }}>{lateCount}</span>
-            <span style={s.bigLabel}>Đang trễ</span>
-          </div>
-          <div style={s.bigStat}>
-            <span style={{ ...s.bigNum, color: '#b45309' }}>
-              {totalFine.toLocaleString('vi-VN')}đ
-            </span>
-            <span style={s.bigLabel}>Tổng phạt hiển thị</span>
-          </div>
-        </div>
-      </div>
 
-      {/* ── Toolbar ── */}
-      <div style={s.toolbar}>
-        <div style={s.searchWrap}>
-          <span style={s.searchIcon}>🔍</span>
-          <input
-            style={s.searchInput}
-            placeholder="Tìm tên, email, sách, mã phiếu..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div style={s.tabs}>
-          {[
-            { key: 'late',     label: '⚠ Đang trễ' },
-            { key: 'returned', label: '✓ Đã trả' },
-            { key: 'all',      label: '☰ Tất cả' },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              style={{ ...s.tab, ...(filter === key ? s.tabActive : {}) }}
-              onClick={() => setFilter(key)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <button
-          style={s.sortBtn}
-          onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}
-        >
-          {sortDir === 'desc' ? '↓ Trễ nhất' : '↑ Ít trễ nhất'}
-        </button>
-        <button style={s.refreshBtn} onClick={load}>🔄</button>
-      </div>
+        <Row className="g-3 mb-4 align-items-end">
+            <Col md={4}>
+                <Form.Group>
+                    <Form.Label className="small fw-600 text-muted">Search Records</Form.Label>
+                    <Form.Control 
+                        placeholder="Name, book, or receipt..." 
+                        value={search} 
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border-0 shadow-sm bg-white py-2 px-3"
+                        style={{ borderRadius: "10px" }}
+                    />
+                </Form.Group>
+            </Col>
+            <Col md={4}>
+                <Form.Group>
+                    <Form.Label className="small fw-600 text-muted">Status Filter</Form.Label>
+                    <div className="d-flex gap-2">
+                        {[
+                            { key: 'late',     label: '⚠ Late' },
+                            { key: 'returned', label: '✓ Returned' },
+                            { key: 'all',      label: '☰ All' },
+                        ].map(({ key, label }) => (
+                            <Button 
+                                key={key}
+                                variant={filter === key ? "primary" : "outline-secondary"}
+                                size="sm"
+                                className="border-0 px-3 fw-600 shadow-sm"
+                                style={{ borderRadius: "20px" }}
+                                onClick={() => setFilter(key)}
+                            >
+                                {label}
+                            </Button>
+                        ))}
+                    </div>
+                </Form.Group>
+            </Col>
+            <Col md={4} className="text-end">
+                <Button 
+                    variant="light" 
+                    className="border-0 shadow-sm fw-600 me-2" 
+                    style={{ borderRadius: "10px" }}
+                    onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                >
+                    {sortDir === 'desc' ? 'Sort: Most Late ↓' : 'Sort: Least Late ↑'}
+                </Button>
+                <Button 
+                    variant="light" 
+                    className="border-0 shadow-sm" 
+                    style={{ borderRadius: "10px" }}
+                    onClick={load}
+                    disabled={loading}
+                >
+                    {loading ? <Spinner animation="border" size="sm" /> : '🔄'}
+                </Button>
+            </Col>
+        </Row>
 
-      {/* ── Table ── */}
-      <div style={s.card}>
-        {loading ? (
-          <div style={s.center}>
-            <div style={s.spinner} />
-            <p style={{ color: '#78716c', marginTop: 12 }}>Đang đồng bộ dữ liệu...</p>
-          </div>
-        ) : visible.length === 0 ? (
-          <div style={s.center}>
-            <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
-            <p style={{ color: '#78716c', fontWeight: 600 }}>Không có kết quả nào</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  {['Người mượn','Sách','Ngày yêu cầu','Hạn trả','Ngày trả thực','Số ngày trễ','Tiền phạt','Trạng thái'].map((h) => (
-                    <th key={h} style={s.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((r, i) => {
-                  const user = users[r.userId];
-                  const book = books[r.bookId];
-                  const days = daysLate(r.dueDate, r.returnDate);
-                  const fine = days * settings.finePerDay;
-
-                  return (
-                    <tr key={r.id} style={{ ...s.tr, background: i % 2 === 0 ? '#fff' : '#fafaf9' }}>
-                      <td style={s.td}>
-                        <div style={s.userName}>{user?.username ?? '—'}</div>
-                        <div style={s.userEmail}>{user?.email ?? ''}</div>
-                      </td>
-                      <td style={s.td}>
-                        <div style={s.bookTitle}>{book?.title ?? '—'}</div>
-                        {r.receiptCode && <div style={s.receipt}>{r.receiptCode}</div>}
-                      </td>
-                      <td style={{ ...s.td, ...s.dateCell }}>{fmt(r.requestDate)}</td>
-                      <td style={{ ...s.td, ...s.dateCell, color: '#be123c', fontWeight: 700 }}>
-                        {fmt(r.dueDate)}
-                      </td>
-                      <td style={{ ...s.td, ...s.dateCell }}>{fmt(r.returnDate)}</td>
-                      <td style={{ ...s.td, textAlign: 'center' }}>
-                        {days > 0 ? (
-                          <span style={s.daysChip}>+{days} ngày</span>
-                        ) : (
-                          <span style={{ color: '#a8a29e' }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ ...s.td, fontWeight: 700, color: fine > 0 ? '#be123c' : '#a8a29e' }}>
-                        {fine > 0 ? `${fine.toLocaleString('vi-VN')}đ` : '—'}
-                      </td>
-                      <td style={s.td}>
-                        <StatusCell row={r} onReturn={load} />
-                      </td>
+        <div className="card-premium border-0 shadow-sm overflow-hidden" style={{ background: "white" }}>
+            <Table hover responsive className="mb-0 overflow-hidden" style={{ borderCollapse: "separate", borderSpacing: "0" }}>
+                <thead style={{ background: "#f8fafc", borderBottom: "2px solid #f1f5f9" }}>
+                    <tr>
+                        <th className="px-4 py-3 border-0">User Info</th>
+                        <th className="px-4 py-3 border-0">Book Details</th>
+                        <th className="px-4 py-3 border-0 text-center">Due Date</th>
+                        <th className="px-4 py-3 border-0 text-center">Days Late</th>
+                        <th className="px-4 py-3 border-0 text-center">Calculated Fine</th>
+                        <th className="px-4 py-3 border-0 text-end">Status</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {!loading && visible.length > 0 && (
-          <div style={s.tableFooter}>
-            Hiển thị <strong>{visible.length}</strong> / <strong>{rows.length}</strong> bản ghi
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                    {loading ? (
+                        <tr>
+                            <td colSpan="6" className="text-center py-5">
+                                <Spinner animation="border" variant="primary" />
+                                <p className="mt-2 text-muted mb-0">Syncing late records...</p>
+                            </td>
+                        </tr>
+                    ) : visible.length === 0 ? (
+                        <tr>
+                            <td colSpan="6" className="text-center py-5 text-muted">
+                                🎉 No late records found for the current filter.
+                            </td>
+                        </tr>
+                    ) : (
+                        visible.map((r) => {
+                            const user = users[r.userId];
+                            const book = books[r.bookId];
+                            const days = daysLate(r.dueDate, r.returnDate);
+                            const fine = days * settings.finePerDay;
+                            
+                            return (
+                                <tr key={r.id} style={{ verticalAlign: "middle" }}>
+                                    <td className="px-4 py-4 border-0 border-bottom">
+                                        <span className="fw-bold d-block">{user?.username || '—'}</span>
+                                        <small className="text-muted">{user?.email || ''}</small>
+                                    </td>
+                                    <td className="px-4 py-4 border-0 border-bottom">
+                                        <span className="fw-600 d-block">{book?.title || '—'}</span>
+                                        {r.receiptCode && <code className="text-danger small">{r.receiptCode}</code>}
+                                    </td>
+                                    <td className="px-4 py-4 border-0 border-bottom text-center">
+                                        <span className="text-danger fw-bold">{fmt(r.dueDate)}</span>
+                                        <small className="text-muted d-block h-min">Requested: {fmt(r.requestDate)}</small>
+                                    </td>
+                                    <td className="px-4 py-4 border-0 border-bottom text-center">
+                                        {days > 0 ? (
+                                            <Badge bg="danger" className="px-2 py-1">+{days} days</Badge>
+                                        ) : (
+                                            <span className="text-muted">—</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4 border-0 border-bottom text-center">
+                                        <span className={fine > 0 ? "fw-bold text-danger" : "text-muted"}>
+                                            {fine > 0 ? `${fine.toLocaleString('vi-VN')}đ` : '—'}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 border-0 border-bottom text-end">
+                                        <Badge 
+                                            pill 
+                                            bg={r.status === 'late' ? 'danger' : r.status === 'returned' ? 'success' : 'secondary'}
+                                            className="px-3 py-2 text-uppercase"
+                                            style={{ fontSize: "10px" }}
+                                        >
+                                            {r.status === 'late' ? 'Overdue' : r.status === 'returned' ? 'Resolved' : r.status}
+                                        </Badge>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    )}
+                </tbody>
+            </Table>
+            {!loading && visible.length > 0 && (
+                <div className="bg-light px-4 py-2 border-top small text-muted">
+                    Showing <strong>{visible.length}</strong> / <strong>{rows.length}</strong> records.
+                </div>
+            )}
+        </div>
     </div>
   );
-}
-
-// ── styles ────────────────────────────────────────────────────────────────────
-const s = {
-  page:        { padding: '28px 0', fontFamily: "'Segoe UI', system-ui, sans-serif" },
-  header:      { background: 'linear-gradient(135deg,#1c1917 0%,#3b1c0a 100%)', borderRadius: 14, padding: '28px 32px', marginBottom: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 },
-  headerEye:   { fontSize: 11, fontWeight: 800, color: '#f97316', letterSpacing: '0.15em', marginBottom: 6, textTransform: 'uppercase' },
-  headerTitle: { fontSize: 26, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' },
-  headerSub:   { color: '#a8a29e', fontSize: 14, marginTop: 6 },
-  headerStats: { display: 'flex', gap: 32 },
-  bigStat:     { textAlign: 'right' },
-  bigNum:      { display: 'block', fontSize: 32, fontWeight: 900, lineHeight: 1 },
-  bigLabel:    { fontSize: 11, color: '#a8a29e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' },
-
-  toolbar:     { background: '#fff', border: '1px solid #e7e5e4', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' },
-  searchWrap:  { display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e7e5e4', borderRadius: 8, padding: '7px 12px', flex: 1, minWidth: 200, background: '#fafaf9' },
-  searchIcon:  { fontSize: 14, flexShrink: 0 },
-  searchInput: { border: 'none', background: 'transparent', outline: 'none', fontSize: 14, width: '100%', fontFamily: 'inherit', color: '#1c1917' },
-  tabs:        { display: 'flex', gap: 6 },
-  tab:         { padding: '7px 14px', borderRadius: 20, border: '1.5px solid #e7e5e4', background: '#f5f5f4', color: '#78716c', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' },
-  tabActive:   { background: '#1c1917', color: '#fff', borderColor: '#1c1917' },
-  sortBtn:     { padding: '7px 14px', borderRadius: 8, border: '1.5px solid #e7e5e4', background: '#fff', color: '#44403c', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
-  refreshBtn:  { padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e7e5e4', background: '#fff', fontSize: 16, cursor: 'pointer' },
-
-  card:        { background: '#fff', borderRadius: 14, border: '1px solid #e7e5e4', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' },
-  table:       { width: '100%', borderCollapse: 'collapse' },
-  th:          { padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 800, color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.07em', background: '#fafaf9', borderBottom: '2px solid #e7e5e4' },
-  tr:          { transition: 'background .1s' },
-  td:          { padding: '13px 16px', borderBottom: '1px solid #f5f5f4', fontSize: 14, verticalAlign: 'middle' },
-  userName:    { fontWeight: 700, color: '#1c1917' },
-  userEmail:   { fontSize: 12, color: '#a8a29e' },
-  bookTitle:   { fontWeight: 600, color: '#292524', maxWidth: 200 },
-  receipt:     { fontSize: 11, color: '#a8a29e', fontFamily: 'monospace', marginTop: 2 },
-  dateCell:    { fontSize: 13, color: '#57534e', whiteSpace: 'nowrap' },
-  daysChip:    { display: 'inline-block', background: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3', borderRadius: 20, padding: '2px 10px', fontSize: 12, fontWeight: 800 },
-  badge:       { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' },
-  badgeBtn:    { cursor: 'pointer', fontFamily: 'inherit', gap: 6, transition: 'opacity .15s, box-shadow .15s', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' },
-  chevron:     { fontSize: 9, opacity: 0.7 },
-
-  dropdown:      { position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100, background: '#fff', border: '1.5px solid #e7e5e4', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', minWidth: 200, overflow: 'hidden' },
-  dropdownTitle: { padding: '8px 14px', fontSize: 10, fontWeight: 800, color: '#a8a29e', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #f5f5f4', background: '#fafaf9' },
-  dropdownItem:  { display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%', padding: '11px 14px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, color: '#1c1917', textAlign: 'left', transition: 'background .12s' },
-  dropdownIcon:  { fontSize: 14, color: '#15803d', marginTop: 1, flexShrink: 0 },
-  dropdownSub:   { fontSize: 11, color: '#a8a29e', marginTop: 2, fontWeight: 400 },
-
-  center:      { padding: '60px 20px', textAlign: 'center' },
-  spinner:     { width: 36, height: 36, border: '3px solid #e7e5e4', borderTopColor: '#be123c', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto' },
-  tableFooter: { padding: '12px 16px', borderTop: '1px solid #f5f5f4', background: '#fafaf9', fontSize: 13, color: '#78716c' },
-};
-
-if (typeof document !== 'undefined' && !document.getElementById('spin-kf')) {
-  const style = document.createElement('style');
-  style.id = 'spin-kf';
-  style.textContent = `
-    @keyframes spin { to { transform: rotate(360deg); } }
-    button[style*="border-radius: 20px"]:hover { opacity: 0.85; }
-  `;
-  document.head.appendChild(style);
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, ListGroup, Modal } from 'react-bootstrap';
+import { Table, Container, Row, Col, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
 
 const API = "http://localhost:9999";
 
@@ -112,105 +112,212 @@ function AdminBookList() {
     if (loading) return <Container className="text-center mt-5"><Spinner animation="border" /></Container>;
 
     return (
-        <Container className="mt-4">
-            <h2 className="mb-4">Manage Books</h2>
-            {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
+        <div className="p-4 bg-transparent">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 className="page-title mb-1">📖 Manage Books</h1>
+                    <p className="text-muted mb-0">Total Books: <strong>{books.length}</strong> | Collection Groups: <strong>{filteredGroups.length}</strong></p>
+                </div>
+                <Button variant="primary" className="btn-primary">
+                    + Add New Book
+                </Button>
+            </div>
+
+            {error && <Alert variant="danger" className="border-0 shadow-sm" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             {!selectedGroup ? (
                 <>
-                    <Row className="mb-4">
-                        <Col md={7}><Form.Control placeholder="Search by title or author..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></Col>
-                        <Col md={5}><Form.Select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}>
-                            <option value="">All Categories</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </Form.Select></Col>
-                    </Row>
-                    <Row>
+                    <div className="card-premium p-4 border-0 mb-4" style={{ background: "white" }}>
+                        <Row>
+                            <Col md={7}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-600 text-muted">Search Collection</Form.Label>
+                                    <Form.Control 
+                                        placeholder="Search by title or author..." 
+                                        value={searchTerm} 
+                                        onChange={(e) => setSearchTerm(e.target.value)} 
+                                        className="border-0 bg-light"
+                                        style={{ height: "45px", borderRadius: "10px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={5}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-600 text-muted">Category Filter</Form.Label>
+                                    <Form.Select 
+                                        value={selectedCat} 
+                                        onChange={(e) => setSelectedCat(e.target.value)}
+                                        className="border-0 bg-light"
+                                        style={{ height: "45px", borderRadius: "10px" }}
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                    </div>
+
+                    <Row className="g-4">
                         {filteredGroups.map(group => (
-                            <Col md={3} key={group.title} className="mb-4">
-                                <Card className="h-100 shadow-sm border-0" onClick={() => setSelectedGroup(group)} style={{cursor:'pointer'}}>
-                                    <Card.Img variant="top" src={group.image} style={{height:'260px', objectFit:'cover'}} />
-                                    <Card.Body>
-                                        <Card.Title className="small fw-bold">{group.title}</Card.Title>
-                                        <div className="d-flex justify-content-between align-items-center mt-3">
-                                            <span className="small text-muted">Qty: <strong>{group.quantity}</strong></span>
-                                            <Badge bg="info">Details</Badge>
+                            <Col md={3} xl={2} key={group.title}>
+                                <div 
+                                    className="card-premium h-100 border-0 p-0 overflow-hidden d-flex flex-column" 
+                                    onClick={() => setSelectedGroup(group)} 
+                                    style={{ cursor: 'pointer', background: "white" }}
+                                >
+                                    <div style={{ position: "relative" }}>
+                                        <img 
+                                            src={group.image} 
+                                            alt="book" 
+                                            style={{ height: '240px', width: "100%", objectFit: 'cover' }} 
+                                        />
+                                        <Badge 
+                                            className="position-absolute" 
+                                            bg="dark" 
+                                            style={{ top: "10px", right: "10px", opacity: 0.8 }}
+                                        >
+                                            Qty: {group.quantity}
+                                        </Badge>
+                                    </div>
+                                    <div className="p-3 flex-grow-1 d-flex flex-column">
+                                        <h6 className="fw-bold mb-1 text-truncate" title={group.title}>{group.title}</h6>
+                                        <p className="small text-muted mb-3 text-truncate">{group.author}</p>
+                                        <div className="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                                            <span className="small fw-600 text-primary">View Details</span>
+                                            <span className="text-muted" style={{ fontSize: "18px" }}>→</span>
                                         </div>
-                                    </Card.Body>
-                                </Card>
+                                    </div>
+                                </div>
                             </Col>
                         ))}
                     </Row>
                 </>
             ) : (
-                <div className="bg-white p-4 rounded shadow-sm border">
-                    <Row className="align-items-start">
-                        <Col md={4} className="text-center">
-                            <img src={selectedGroup.image} alt="book" className="w-100 rounded shadow mb-3" style={{maxHeight: '400px', objectFit: 'contain'}} />
-                            <Button variant="outline-secondary" className="w-100" onClick={() => setSelectedGroup(null)}>Back to List</Button>
+                <div className="card-premium p-4 border-0" style={{ background: "white" }}>
+                    <div className="mb-4">
+                        <Button variant="link" onClick={() => setSelectedGroup(null)} className="text-decoration-none p-0 text-muted fw-500">
+                             ← Back to collection
+                        </Button>
+                    </div>
+                    <Row className="g-5">
+                        <Col lg={4}>
+                            <div className="card-premium p-2 border-0 bg-light shadow-none">
+                                <img src={selectedGroup.image} alt="book" className="w-100 rounded" style={{ maxHeight: '500px', objectFit: 'contain' }} />
+                            </div>
                         </Col>
-                        <Col md={8}>
-                            <h3 className="text-primary fw-bold">{selectedGroup.title}</h3>
-                            <p className="mb-2"><strong>Series:</strong> {selectedGroup.series || "N/A"} | <strong>Author:</strong> {selectedGroup.author}</p>
-                            <p className="mb-2"><strong>Category:</strong> {categories.find(c => Number(c.id) === Number(selectedGroup.categoryId))?.name || "N/A"}</p>
-                            
-                            {/* REMOVED GENERAL STATUS HERE */}
-
-                            <div className="bg-light p-3 rounded mb-3 border">
-                                <strong>Description:</strong>
-                                <p className="mb-0 small text-muted mt-1">{selectedGroup.description || "No description available."}</p>
+                        <Col lg={8}>
+                            <div className="mb-4">
+                                <Badge bg="primary" className="mb-2" style={{ textTransform: "uppercase", letterSpacing: "1px", padding: "5px 12px" }}>
+                                    {categories.find(c => Number(c.id) === Number(selectedGroup.categoryId))?.name || "Uncategorized"}
+                                </Badge>
+                                <h1 className="fw-bold">{selectedGroup.title}</h1>
+                                <p className="lead text-muted">{selectedGroup.author}</p>
                             </div>
                             
-                            <hr />
+                            <div className="mb-4">
+                                <h6 className="fw-bold text-uppercase small text-muted mb-2">Description</h6>
+                                <p className="text-muted" style={{ lineHeight: "1.6" }}>{selectedGroup.description || "No description provided."}</p>
+                            </div>
+
+                            <hr className="my-4 op-10" />
                             
-                            <h5>Barcode List ({selectedGroup.quantity} copies)</h5>
-                            <Form.Control size="sm" placeholder="Find barcode..." className="mb-2" value={barcodeSearch} onChange={(e)=>setBarcodeSearch(e.target.value)} />
-                            <ListGroup style={{maxHeight:'180px', overflowY:'auto'}} className="mb-3 border">
-                                {selectedGroup.inventory.filter(i => i.barcode.toLowerCase().includes(barcodeSearch.toLowerCase())).map(item => (
-                                    <ListGroup.Item key={item.id} className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <code className="text-danger fw-bold">{item.barcode}</code>
-                                            <small className="ms-3 text-muted">Status: {item.status}</small>
-                                        </div>
-                                        <div>
-                                            <Button variant={item.available ? "success" : "secondary"} size="sm" className="me-2 py-0 px-2" onClick={()=>toggleStatus(item)}>
-                                                {item.available ? "Available" : " Not Available"}
-                                            </Button>
-                                            <Button variant="link" className="text-danger p-0 text-decoration-none small" onClick={()=>handleDeleteItem(item.id)}>Delete</Button>
-                                        </div>
-                                    </ListGroup.Item>
-                                ))}
-                            </ListGroup>
+                            <div className="mb-4">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 className="fw-bold mb-0">Inventory Copies ({selectedGroup.quantity})</h5>
+                                    <Form.Control 
+                                        size="sm" 
+                                        placeholder="Filter by barcode..." 
+                                        className="w-auto border-0 bg-light px-3 py-2" 
+                                        style={{borderRadius: "8px"}}
+                                        value={barcodeSearch} 
+                                        onChange={(e)=>setBarcodeSearch(e.target.value)} 
+                                    />
+                                </div>
+                                <div className="border rounded-3 overflow-hidden shadow-sm">
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        <Table hover borderless className="mb-0">
+                                            <thead className="bg-light">
+                                                <tr>
+                                                    <th className="small fw-600 text-muted p-3">Barcode</th>
+                                                    <th className="small fw-600 text-muted p-3">Condition</th>
+                                                    <th className="small fw-600 text-muted p-3">Availability</th>
+                                                    <th className="small fw-600 text-muted p-3 text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {selectedGroup.inventory.filter(i => i.barcode.toLowerCase().includes(barcodeSearch.toLowerCase())).map(item => (
+                                                    <tr key={item.id} className="border-top align-middle">
+                                                        <td className="p-3"><code className="text-danger fw-bold">{item.barcode}</code></td>
+                                                        <td className="p-3"><small className="text-muted">{item.status}</small></td>
+                                                        <td className="p-3">
+                                                            <Badge pill bg={item.available ? "success" : "secondary"} className="px-3">
+                                                                {item.available ? "In Stock" : "Checked Out"}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="p-3 text-end">
+                                                            <div className="d-flex gap-2 justify-content-end">
+                                                                <Button 
+                                                                    variant="outline-primary" 
+                                                                    size="sm" 
+                                                                    onClick={()=>toggleStatus(item)}
+                                                                    className="border-0 fw-600"
+                                                                >
+                                                                    Update
+                                                                </Button>
+                                                                <Button 
+                                                                    variant="outline-danger" 
+                                                                    size="sm" 
+                                                                    onClick={()=>handleDeleteItem(item.id)}
+                                                                    className="border-0 fw-600"
+                                                                >
+                                                                    Remove
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </div>
+                                </div>
+                            </div>
                             
-                            <div className="d-flex gap-2">
-                                <Button variant="warning" className="fw-bold px-4" onClick={()=>{setEditData(selectedGroup); setShowEditModal(true)}}>Edit Group</Button>
-                                <Button variant="danger" className="fw-bold px-4" onClick={()=>handleDeleteGroup(selectedGroup.title)}>Delete Group</Button>
+                            <div className="d-flex gap-3 pt-3">
+                                <Button variant="warning" className="px-4 fw-bold shadow-sm" style={{borderRadius: "8px"}} onClick={()=>{setEditData(selectedGroup); setShowEditModal(true)}}>Edit Basic Info</Button>
+                                <Button variant="danger" className="px-4 fw-bold shadow-sm" style={{borderRadius: "8px"}} onClick={()=>handleDeleteGroup(selectedGroup.title)}>Remove Collection</Button>
                             </div>
                         </Col>
                     </Row>
                 </div>
             )}
 
-            <Modal show={showEditModal} onHide={()=>setShowEditModal(false)} centered>
-                <Modal.Header closeButton><Modal.Title>Edit Group Information</Modal.Title></Modal.Header>
-                <Modal.Body>
-                    <Form.Group className="mb-3"><Form.Label>Series</Form.Label><Form.Control value={editData.series || ''} onChange={(e)=>setEditData({...editData, series: e.target.value})} /></Form.Group>
-                    <Form.Group className="mb-3"><Form.Label>Author</Form.Label><Form.Control value={editData.author || ''} onChange={(e)=>setEditData({...editData, author: e.target.value})} /></Form.Group>
+            <Modal show={showEditModal} onHide={()=>setShowEditModal(false)} centered size="lg">
+                <Modal.Header closeButton style={{background: "#f8fafc"}}><Modal.Title className="fw-bold">Update Book Information</Modal.Title></Modal.Header>
+                <Modal.Body className="p-4">
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3"><Form.Label className="fw-600">Series Name</Form.Label><Form.Control value={editData.series || ''} onChange={(e)=>setEditData({...editData, series: e.target.value})} /></Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group className="mb-3"><Form.Label className="fw-600">Author</Form.Label><Form.Control value={editData.author || ''} onChange={(e)=>setEditData({...editData, author: e.target.value})} /></Form.Group>
+                        </Col>
+                    </Row>
                     <Form.Group className="mb-3">
-                        <Form.Label>Category</Form.Label>
+                        <Form.Label className="fw-600">Category Tag</Form.Label>
                         <Form.Select value={editData.categoryId || ''} onChange={(e)=>setEditData({...editData, categoryId: e.target.value})}>
                             <option value="">Select Category</option>
                             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </Form.Select>
                     </Form.Group>
-                    <Form.Group className="mb-3"><Form.Label>Description</Form.Label><Form.Control as="textarea" rows={4} value={editData.description || ''} onChange={(e)=>setEditData({...editData, description: e.target.value})} /></Form.Group>
+                    <Form.Group className="mb-0"><Form.Label className="fw-600">Full Description</Form.Label><Form.Control as="textarea" rows={5} value={editData.description || ''} onChange={(e)=>setEditData({...editData, description: e.target.value})} /></Form.Group>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={()=>setShowEditModal(false)}>Cancel</Button>
-                    <Button variant="primary" onClick={handleSaveEdit}>Save Changes</Button>
+                <Modal.Footer className="border-0 pt-0">
+                    <Button variant="light" onClick={()=>setShowEditModal(false)} className="px-4">Cancel</Button>
+                    <Button variant="primary" onClick={handleSaveEdit} className="px-4 btn-primary">Save Changes</Button>
                 </Modal.Footer>
             </Modal>
-        </Container>
+        </div>
     );
 }
 
