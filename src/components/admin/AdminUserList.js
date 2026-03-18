@@ -57,32 +57,7 @@ function AdminUserList({ auth }) {
         }
     };
 
-    // Function to handle Delete User
-    const handleDeleteUser = async (userToDelete) => {
-        if (userToDelete.id === auth?.id) {
-            setError("Bạn không thể xóa chính mình!");
-            return;
-        }
-        if (userToDelete.role === 'admin') {
-            setError("Không thể xóa tài khoản Quản trị viên khác!");
-            return;
-        }
 
-        if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${userToDelete.username}"?`)) {
-            setLoading(true);
-            try {
-                await axios.delete(`http://localhost:9999/users/${userToDelete.id}`);
-                // Re-fetch users after deletion
-                const res = await axios.get('http://localhost:9999/users');
-                setUsers(res.data);
-            } catch (err) {
-                console.error(err);
-                setError('Failed to delete user');
-            } finally {
-                setLoading(false);
-            }
-        }
-    };
 
     // Open modal for adding a new user
     const openAddUserModal = () => {
@@ -168,16 +143,7 @@ function AdminUserList({ auth }) {
                                             >
                                                 Edit
                                             </Button>
-                                            <Button 
-                                                variant="outline-danger" 
-                                                size="sm" 
-                                                className="border-0 fw-600 px-3" 
-                                                onClick={() => handleDeleteUser(user)}
-                                                disabled={user.role === 'admin'}
-                                                title={user.role === 'admin' ? "Cannot delete Admin accounts" : ""}
-                                            >
-                                                Delete
-                                            </Button>
+
                                         </div>
                                     </td>
                                 </tr>

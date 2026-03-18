@@ -402,7 +402,7 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                 transition: "all 0.2s",
                 boxShadow: isActive("/user/books") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
-                📚 Available Books
+                🏠 Home
               </Link>
               <Link to="/user/history" style={{
                 display: "flex",
@@ -413,7 +413,7 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                 textDecoration: "none",
                 background: isActive("/user/history") ? "var(--primary)" : "transparent",
                 borderRadius: "12px",
-                margin: "0 16px",
+                margin: "4px 16px",
                 fontSize: "16px",
                 fontWeight: isActive("/user/history") ? "600" : "500",
                 transition: "all 0.2s",
@@ -425,16 +425,18 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "18px 24px",
-                color: isActive("/user/history") ? "#ec5b13" : "#cbd5e1",
+                padding: "16px 24px",
+                color: isActive("/user/wishlist") ? "white" : "#94a3b8",
                 textDecoration: "none",
-                background: isActive("/user/history") ? "rgba(236, 91, 19, 0.15)" : "transparent",
-                borderLeft: isActive("/user/history") ? "4px solid #ec5b13" : "4px solid transparent",
-                borderRadius: "0 8px 8px 0",
-                fontSize: "18px",
-                transition: "all 0.2s"
+                background: isActive("/user/wishlist") ? "var(--primary)" : "transparent",
+                borderRadius: "12px",
+                margin: "4px 16px",
+                fontSize: "16px",
+                fontWeight: isActive("/user/wishlist") ? "600" : "500",
+                transition: "all 0.2s",
+                boxShadow: isActive("/user/wishlist") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
               }}>
-                ⏱️ My Wishlist
+                ❤️ My Wishlist
               </Link>
             </div>
           )}
@@ -615,7 +617,7 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                     {/* Menu Items */}
                     {[
                       { icon: "👤", label: "Profile" },
-                      ...(auth?.role === 'user' ? [{ icon: "❤️", label: "My Favorite" }] : []),
+                      
                       { icon: "⚙️", label: "Settings" },
                       { icon: "🚪", label: "Logout", isLogout: true }
                     ].map((item, idx) => (
@@ -680,6 +682,29 @@ function App() {
   });
   const [openMenu, setOpenMenu] = useState(false);
 
+  // Check if user is locked or deleted on load/render
+  useEffect(() => {
+    const verifyUser = async () => {
+      if (!auth) return;
+      try {
+        const res = await axios.get(`http://localhost:9999/users/${auth.id}`);
+        const currentUser = res.data;
+        if (!currentUser || currentUser.locked) {
+          handleLogout();
+        } else {
+          // Sync with server data (in case fullName/avatar changed)
+          // setAuth(currentUser); 
+          // localStorage.setItem("user", JSON.stringify(currentUser));
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          handleLogout();
+        }
+      }
+    };
+    verifyUser();
+  }, [auth?.id]); // Run when auth changes or on mount
+
 
   const handleLogout = () => {
     setAuth(null);
@@ -705,7 +730,9 @@ function App() {
                   auth
                     ? auth.role === "admin"
                       ? "/admin/books"
-                      : "/user/books"
+                      : auth.role === "staff"
+                        ? "/staff/requests"
+                        : "/user/books"
                     : "/login"
                 }
               />

@@ -264,16 +264,7 @@ const styles = {
     cursor: "pointer",
     boxShadow: "0 2px 8px rgba(108,99,255,0.3)",
   },
-  btnDanger: {
-    background: C.danger,
-    border: "none",
-    borderRadius: "9px",
-    padding: "10px 22px",
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: "14px",
-    cursor: "pointer",
-  },
+
   toast: {
     position: "fixed",
     bottom: "24px",
@@ -339,7 +330,7 @@ export default function AdminUserList({ auth, handleLogout }) {
     setForm({ username: user.username, password: user.password, role: user.role, locked: !!user.locked });
     setModal({ type: "edit", user });
   };
-  const openDelete = (user) => setModal({ type: "delete", user });
+
 
   const handleSave = async () => {
     if (!form.username.trim() || !form.password.trim()) return;
@@ -349,10 +340,10 @@ export default function AdminUserList({ auth, handleLogout }) {
         const all = await axios.get(`${API}/users`);
         const nextId = String(Math.max(...all.data.map((u) => Number(u.id)), 0) + 1);
         await axios.post(`${API}/users`, { id: nextId, ...form });
-        showToast("✓ Đã thêm người dùng");
+        showToast("✓ User added successfully");
       } else {
         await axios.put(`${API}/users/${modal.user.id}`, { ...modal.user, ...form });
-        showToast("✓ Đã cập nhật");
+        showToast("✓ Updated successfully");
       }
       await fetchUsers();
       setModal(null);
@@ -361,32 +352,13 @@ export default function AdminUserList({ auth, handleLogout }) {
     }
   };
 
-  const handleDelete = async () => {
-    const isSelf = modal.user.id === auth?.id;
-    setLoading(true);
-    try {
-      await axios.delete(`${API}/users/${modal.user.id}`);
-      showToast(isSelf ? "✓ Đã xóa chính mình. Hệ thống đang đăng xuất..." : "✓ Đã xóa người dùng");
-      
-      if (isSelf && handleLogout) {
-          setTimeout(() => handleLogout(), 1000);
-      }
-      
-      await fetchUsers();
-      setModal(null);
-    } catch (err) {
-        console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const toggleLock = async (user) => {
     const isSelf = user.id === auth?.id;
     await axios.patch(`${API}/users/${user.id}`, { locked: !user.locked });
     const msg = isSelf 
-        ? (user.locked ? "✓ Đã mở khóa. Hệ thống đang đăng xuất..." : "✓ Đã khóa tài khoản. Hệ thống đang đăng xuất...")
-        : (user.locked ? "✓ Đã mở khóa tài khoản" : "✓ Đã khóa tài khoản");
+        ? (user.locked ? "✓ Unlocked. Logging out..." : "✓ Account locked. Logging out...")
+        : (user.locked ? "✓ Account unlocked" : "✓ Account locked");
     showToast(msg);
     
     if (isSelf && handleLogout) {
@@ -407,19 +379,19 @@ export default function AdminUserList({ auth, handleLogout }) {
     <div style={styles.page}>
       <div style={styles.header}>
         <h1 style={styles.title}>
-          Quản lý <span style={styles.titleAccent}>Người dùng</span>
+          User <span style={styles.titleAccent}>Management</span>
         </h1>
         <button style={styles.btnPrimary} onClick={openAdd}>
-          <span style={{ fontSize: "17px" }}>+</span> Thêm người dùng
+          <span style={{ fontSize: "17px" }}>+</span> Add User
         </button>
       </div>
 
       <div style={styles.statsRow}>
         {[
-          { label: "Tổng users", num: stats.total, accent: C.accent },
-          { label: "Admin", num: stats.admins, accent: C.warning },
-          { label: "Đang hoạt động", num: stats.active, accent: C.success },
-          { label: "Đã khóa", num: stats.locked, accent: C.danger },
+          { label: "Total Users", num: stats.total, accent: C.accent },
+          { label: "Admins", num: stats.admins, accent: C.warning },
+          { label: "Active Memebers", num: stats.active, accent: C.success },
+          { label: "Locked Accounts", num: stats.locked, accent: C.danger },
         ].map((s) => (
           <div key={s.label} style={styles.statCard(s.accent)}>
             <p style={{ ...styles.statNum, color: s.accent }}>{s.num}</p>
@@ -431,23 +403,23 @@ export default function AdminUserList({ auth, handleLogout }) {
       <div style={styles.filterBar}>
         <input
           style={styles.input}
-          placeholder="🔍  Tìm theo username..."
+          placeholder="🔍  Search by username..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select style={styles.select} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-          <option value="all">Tất cả vai trò</option>
+          <option value="all">All Roles</option>
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
           <option value="user">User</option>
         </select>
         <select style={styles.select} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">Tất cả trạng thái</option>
-          <option value="active">Hoạt động</option>
-          <option value="locked">Đã khóa</option>
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="locked">Locked</option>
         </select>
         <span style={{ color: C.textMuted, fontSize: "13px", marginLeft: "auto", fontWeight: "500" }}>
-          {filtered.length} kết quả
+          {filtered.length} results
         </span>
       </div>
 
@@ -455,14 +427,14 @@ export default function AdminUserList({ auth, handleLogout }) {
         <table style={styles.table}>
           <thead>
             <tr>
-              {["#", "Người dùng", "Vai trò", "Trạng thái", "Thao tác"].map((h) => (
+              {["#", "User", "Role", "Status", "Actions"].map((h) => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={5} style={styles.emptyRow}>Không tìm thấy người dùng nào</td></tr>
+              <tr><td colSpan={5} style={styles.emptyRow}>No users found</td></tr>
             ) : (
               filtered.map((user, idx) => {
                 const [ac, bg] = avatarColor(user.username);
@@ -498,21 +470,21 @@ export default function AdminUserList({ auth, handleLogout }) {
                     </td>
                     <td style={tdStyle}>
                       {isLocked ? (
-                        <span style={styles.badge(C.danger, C.dangerSoft)}>🔒 Đã khóa</span>
+                        <span style={styles.badge(C.danger, C.dangerSoft)}>🔒 Locked</span>
                       ) : (
-                        <span style={styles.badge(C.success, C.successSoft)}>✓ Hoạt động</span>
+                        <span style={styles.badge(C.success, C.successSoft)}>✓ Active</span>
                       )}
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        <button style={styles.actionBtn(C.accentText, C.accentSoft)} onClick={() => openEdit(user)}>✏ Sửa</button>
+                        <button style={styles.actionBtn(C.accentText, C.accentSoft)} onClick={() => openEdit(user)}>✏ Edit</button>
                         <button
                           style={styles.actionBtn(isLocked ? C.success : C.warning, isLocked ? C.successSoft : C.warningSoft)}
                           onClick={() => toggleLock(user)}
                         >
-                          {isLocked ? "🔓 Mở" : "🔒 Khóa"}
+                          {isLocked ? "🔓 Unlock" : "🔒 Lock"}
                         </button>
-                        <button style={styles.actionBtn(C.danger, C.dangerSoft)} onClick={() => openDelete(user)}>🗑 Xóa</button>
+                        
                       </div>
                     </td>
                   </tr>
@@ -528,20 +500,20 @@ export default function AdminUserList({ auth, handleLogout }) {
         <div style={styles.modal} onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div style={styles.modalBox}>
             <h2 style={styles.modalTitle}>
-              {modal.type === "add" ? "➕ Thêm người dùng" : "✏️ Sửa người dùng"}
+              {modal.type === "add" ? "➕ Add User" : "✏️ Edit User"}
             </h2>
             <div style={styles.formGroup}>
               <label style={styles.label}>Username</label>
               <input style={styles.formInput} value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="Nhập username" />
+                onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="Enter username" />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Mật khẩu</label>
+              <label style={styles.label}>Password</label>
               <input style={styles.formInput} type="password" value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Nhập mật khẩu" />
+                onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Enter password" />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Vai trò</label>
+              <label style={styles.label}>Role</label>
               <select style={styles.formSelect} value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="user">User</option>
@@ -554,37 +526,20 @@ export default function AdminUserList({ auth, handleLogout }) {
                 <input type="checkbox" checked={!!form.locked}
                   onChange={(e) => setForm({ ...form, locked: e.target.checked })}
                   style={{ width: "16px", height: "16px", accentColor: C.accent }} />
-                Khóa tài khoản
+                Lock Account
               </label>
             </div>
             <div style={styles.modalActions}>
-              <button style={styles.btnCancel} onClick={() => setModal(null)}>Hủy</button>
+              <button style={styles.btnCancel} onClick={() => setModal(null)}>Cancel</button>
               <button style={styles.btnSave} onClick={handleSave} disabled={loading}>
-                {loading ? "Đang lưu..." : "Lưu"}
+                {loading ? "Saving..." : "Save"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Modal */}
-      {modal?.type === "delete" && (
-        <div style={styles.modal} onClick={(e) => e.target === e.currentTarget && setModal(null)}>
-          <div style={styles.modalBox}>
-            <h2 style={{ ...styles.modalTitle, color: C.danger }}>🗑 Xác nhận xóa</h2>
-            <p style={{ color: C.textDim, marginBottom: "8px", fontSize: "14px" }}>
-              Bạn có chắc muốn xóa người dùng <strong style={{ color: C.text }}>{modal.user.username}</strong>?
-            </p>
-            <p style={{ color: C.textMuted, fontSize: "13px" }}>Hành động này không thể hoàn tác.</p>
-            <div style={styles.modalActions}>
-              <button style={styles.btnCancel} onClick={() => setModal(null)}>Hủy</button>
-              <button style={styles.btnDanger} onClick={handleDelete} disabled={loading}>
-                {loading ? "Đang xóa..." : "Xóa"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {toast && <div style={styles.toast}>{toast}</div>}
     </div>

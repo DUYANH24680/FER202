@@ -58,12 +58,12 @@ function AdminInventoryReport() {
       return { text: "Available", color: "#10b981", bgColor: "#d1fae5" };
     }
     if (!book.available && !book.status) {
-       return { text: "Borrowed", color: "#1e293b", bgColor: "#e2e8f0" };
+      return { text: "Borrowed", color: "#1e293b", bgColor: "#e2e8f0" };
     }
     if (book.status === "borrowed") {
       return { text: "Borrowed", color: "#1e293b", bgColor: "#e2e8f0" };
     }
-    
+
     return { text: "Unknown", color: "#6b7280", bgColor: "#f3f4f6" };
   };
 

@@ -8,7 +8,8 @@ function ManageRules() {
         id: 1,
         maxBorrowDays: 14,
         maxBooksPerUser: 3,
-        finePerDay: 5000
+        finePerDay: 5000,
+        pricePerBook: 10000
     };
 
     const [rules, setRules] = useState(defaultRules);
@@ -146,6 +147,26 @@ function ManageRules() {
                                     </InputGroup>
                                     <Form.Text className="text-muted">
                                         Số tiền phạt cộng thêm cho mỗi ngày trả sách chậm.
+                                    </Form.Text>
+                                </Form.Group>
+
+                                {/* Giá mượn mỗi quyển */}
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-bold">Giá mượn mỗi quyển</Form.Label>
+                                    <InputGroup>
+                                        <Form.Control
+                                            type="number"
+                                            name="pricePerBook"
+                                            value={rules.pricePerBook}
+                                            onChange={handleChange}
+                                            min="0"
+                                            step="1000"
+                                            required
+                                        />
+                                        <InputGroup.Text>VNĐ / quyển</InputGroup.Text>
+                                    </InputGroup>
+                                    <Form.Text className="text-muted">
+                                        Giá cố định cho mỗi quyển sách khi mượn.
                                     </Form.Text>
                                 </Form.Group>
 
