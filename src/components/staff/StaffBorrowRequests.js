@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Button, Badge, Form } from 'react-bootstrap';
 
-export default function StaffBorrowRequests({ auth }) {
+export default function StaffBorrowRequests() {
 
   const [requests, setRequests] = useState([]);
   const [books, setBooks] = useState([]);
   const [users, setUsers] = useState([]);
-  const [timeType, setTimeType] = useState("request"); // 👈 dropdown
+  const [timeType, setTimeType] = useState("request");
 
   const API = "http://localhost:9999";
 
@@ -15,13 +15,19 @@ export default function StaffBorrowRequests({ auth }) {
 
   const loadData = async () => {
     try {
-      const borrowRes = await axios.get(`${API}/borrows`);
-      const bookRes = await axios.get(`${API}/books`);
-      const userRes = await axios.get(`${API}/users`);
+      const [borrowRes, bookRes, userRes] = await Promise.all([
+        axios.get(`${API}/borrows`),
+        axios.get(`${API}/books`),
+        axios.get(`${API}/users`)
+      ]);
 
-      setRequests(borrowRes.data);
-      setBooks(bookRes.data);
-      setUsers(userRes.data);
+      const sorted = borrowRes.data.sort(
+        (a, b) => new Date(b.requestDate || 0) - new Date(a.requestDate || 0)
+      );
+
+      setRequests(sorted);
+      setBooks(bookRes.data || []);
+      setUsers(userRes.data || []);
 
     } catch (err) {
       console.error(err);
@@ -32,78 +38,75 @@ export default function StaffBorrowRequests({ auth }) {
     loadData();
   }, []);
 
-  /* ---------- FORMAT TIME ---------- */
+  /* ---------- SAFE COMPARE ---------- */
+
+  const isSame = (a, b) => String(a) === String(b);
+
+  /* ---------- FORMAT DATE ---------- */
 
   const formatDate = (date) => {
     if (!date) return "-";
     return new Date(date).toLocaleString();
   };
 
-  /* ---------- GET TIME BY TYPE ---------- */
+  /* ---------- TIME ---------- */
 
-  const getTimeByType = (request) => {
-    switch (timeType) {
-      case "request":
-        return request.requestDate;
-      case "approved":
-        return request.approvedDate;
-      case "rejected":
-        return request.rejectedDate;
-      case "returned":
-        return request.returnDate;
-      default:
-        return null;
-    }
+  const getTime = (req) => {
+    if (timeType === "request") return req.requestDate;
+    if (timeType === "approved" && req.status === "approved") return req.requestDate;
+    if (timeType === "rejected" && req.status === "rejected") return req.requestDate;
+    if (timeType === "returned") return req.returnDate;
+    return null;
   };
 
   /* ---------- USER ---------- */
 
-  const getUsername = (userId) => {
-    const user = users.find(u => String(u.id) === String(userId));
-    return user ? user.username : userId;
+  const getUser = (userId) => {
+    return users.find(u => isSame(u.id, userId));
   };
 
   /* ---------- BOOK ---------- */
 
-  const getBookInfo = (bookId) => {
-    const book = books.find(b => String(b.id) === String(bookId));
-    if (!book) return "Unknown";
-    return `${book.title} (${book.barcode})`;
-  };
-
   const getBook = (bookId) => {
-    return books.find(b => String(b.id) === String(bookId));
+    return books.find(b => isSame(b.id, bookId));
   };
 
-  /* ---------- STATUS BADGE ---------- */
+  /* ---------- STATUS UI ---------- */
 
-  const getStatusBadge = (status) => {
-    if (status === "rejected") return <Badge bg="danger">Rejected</Badge>;
-    if (status === "pending") return <Badge bg="warning">Pending</Badge>;
-    if (status === "approved") return <Badge bg="success">Approved</Badge>;
-    if (status === "returned") return <Badge bg="primary">Returned</Badge>;
+  const renderStatus = (status) => {
+    const map = {
+      pending: "warning",
+      approved: "success",
+      rejected: "danger",
+      returned: "primary"
+    };
+    return <Badge bg={map[status] || "secondary"}>{status}</Badge>;
   };
 
-  /* ---------- APPROVE ---------- */
+  /* ---------- CHECK BOOK BORROWED ---------- */
 
-  const handleApprove = async (request) => {
-    if (!request.id) return alert("Invalid ID");
+  const isBookBeingBorrowed = (bookId) => {
+    return requests.some(r =>
+      isSame(r.bookId, bookId) &&
+      r.status === "approved"
+    );
+  };
 
-    const book = getBook(request.bookId);
-    if (book && book.status === "borrowed") {
-      return alert("Book already borrowed");
-    }
+  /* ---------- APPROVE (FIX ID) ---------- */
 
+  const handleApprove = async (req) => {
     try {
-      await axios.patch(`${API}/borrows/${request.id}`, {
-        status: 'approved',
-        approvedDate: new Date().toISOString()
+      if (isBookBeingBorrowed(req.bookId)) {
+        alert("Book already borrowed!");
+        return;
+      }
+
+      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
+        status: "approved"
       });
 
-      await axios.patch(`${API}/books/${request.bookId}`, {
-        available: false,
-        status: 'borrowed',
-        statusDate: new Date().toISOString()
+      await axios.patch(`${API}/books/${Number(req.bookId)}`, {
+        available: false
       });
 
       loadData();
@@ -114,57 +117,49 @@ export default function StaffBorrowRequests({ auth }) {
     }
   };
 
-  /* ---------- REJECT ---------- */
+  /* ---------- REJECT (FIX ID) ---------- */
 
-  const handleReject = async (request) => {
-    if (!request.id) return alert("Invalid ID");
-
+  const handleReject = async (req) => {
     try {
-      await axios.patch(`${API}/borrows/${request.id}`, {
-        status: 'rejected',
-        rejectedDate: new Date().toISOString()
+      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
+        status: "rejected"
       });
 
       loadData();
 
     } catch (err) {
       console.error(err);
-      alert("Reject failed");
     }
   };
 
-  /* ---------- RETURN ---------- */
+  /* ---------- RETURN (FIX ID) ---------- */
 
-  const handleReturn = async (request) => {
-    if (!request.id) return alert("Invalid ID");
-
+  const handleReturn = async (req) => {
     try {
-      await axios.patch(`${API}/borrows/${request.id}`, {
-        status: 'returned',
+      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
+        status: "returned",
         returnDate: new Date().toISOString()
       });
 
-      await axios.patch(`${API}/books/${request.bookId}`, {
-        available: true,
-        status: null
+      await axios.patch(`${API}/books/${Number(req.bookId)}`, {
+        available: true
       });
 
       loadData();
 
     } catch (err) {
       console.error(err);
-      alert("Return failed");
     }
   };
 
   /* ---------- UI ---------- */
 
   return (
-    <div className="container mt-3">
+    <div className="container mt-4">
 
-      <h2 className="mb-3">Borrow Requests</h2>
+      <h2>Borrow Management</h2>
 
-      <Table striped bordered hover className="text-center align-middle">
+      <Table bordered hover className="text-center align-middle">
 
         <thead>
           <tr>
@@ -172,9 +167,8 @@ export default function StaffBorrowRequests({ auth }) {
             <th>Book</th>
             <th>Status</th>
 
-            {/* ✅ DROPDOWN Ở HEADER */}
             <th>
-              Time <br />
+              Time
               <Form.Select
                 size="sm"
                 value={timeType}
@@ -187,55 +181,58 @@ export default function StaffBorrowRequests({ auth }) {
               </Form.Select>
             </th>
 
-            <th>Actions</th>
+            <th>Action</th>
           </tr>
         </thead>
 
         <tbody>
 
-          {requests.map((request, index) => (
+          {requests.map((req) => {
+            const user = getUser(req.userId);
+            const book = getBook(req.bookId);
 
-            <tr key={request.id ?? index}>
+            return (
+              <tr key={String(req.id)}>
+                <td>{user?.username || "Unknown"}</td>
+                <td>{book?.title || "Unknown Book"}</td>
+                <td>{renderStatus(req.status)}</td>
+                <td>{formatDate(getTime(req))}</td>
 
-              <td>{getUsername(request.userId)}</td>
+                <td>
+                  {req.status === "pending" && (
+                    <>
+                      <Button
+                        variant="success"
+                        onClick={() => handleApprove(req)}
+                      >
+                        Approve
+                      </Button>{" "}
 
-              <td>{getBookInfo(request.bookId)}</td>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleReject(req)}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
 
-              <td>{getStatusBadge(request.status)}</td>
-
-              {/* ✅ TIME THEO DROPDOWN */}
-              <td>{formatDate(getTimeByType(request))}</td>
-
-              <td>
-
-                {request.status === 'pending' && request.id && (
-                  <>
-                    <Button variant="success" onClick={() => handleApprove(request)}>
-                      Approve
-                    </Button>{" "}
-
-                    <Button variant="danger" onClick={() => handleReject(request)}>
-                      Reject
+                  {req.status === "approved" && (
+                    <Button
+                      variant="primary"
+                      onClick={() => handleReturn(req)}
+                    >
+                      Return
                     </Button>
-                  </>
-                )}
-
-                {request.status === 'approved' && request.id && (
-                  <Button variant="primary" onClick={() => handleReturn(request)}>
-                    Return
-                  </Button>
-                )}
-
-              </td>
-
-            </tr>
-
-          ))}
+                  )}
+                </td>
+              </tr>
+            );
+          })}
 
         </tbody>
 
       </Table>
-
     </div>
   );
 }
