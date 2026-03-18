@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Table, Button, Badge, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Table, Button, Badge, Form, Collapse } from "react-bootstrap";
 
 export default function StaffBorrowRequests() {
-
   const [requests, setRequests] = useState([]);
   const [books, setBooks] = useState([]);
   const [users, setUsers] = useState([]);
-  const [timeType, setTimeType] = useState("request");
+  const [rejectReasons, setRejectReasons] = useState({});
+  const [openRow, setOpenRow] = useState({});
 
   const API = "http://localhost:9999";
 
-  /* ---------- LOAD DATA ---------- */
-
+  /* ---------- LOAD ---------- */
   const loadData = async () => {
     try {
       const [borrowRes, bookRes, userRes] = await Promise.all([
@@ -21,14 +20,9 @@ export default function StaffBorrowRequests() {
         axios.get(`${API}/users`)
       ]);
 
-      const sorted = borrowRes.data.sort(
-        (a, b) => new Date(b.requestDate || 0) - new Date(a.requestDate || 0)
-      );
-
-      setRequests(sorted);
+      setRequests(borrowRes.data || []);
       setBooks(bookRes.data || []);
       setUsers(userRes.data || []);
-
     } catch (err) {
       console.error(err);
     }
@@ -38,41 +32,60 @@ export default function StaffBorrowRequests() {
     loadData();
   }, []);
 
-  /* ---------- SAFE COMPARE ---------- */
-
+  /* ---------- HELPER ---------- */
   const isSame = (a, b) => String(a) === String(b);
 
-  /* ---------- FORMAT DATE ---------- */
+  const getUser = (id) => users.find(u => isSame(u.id, id));
+  const getBook = (id) => books.find(b => isSame(b.id, id));
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleString();
-  };
+  /* ---------- TITLE LOGIC ---------- */
+  const getSameTitleBooks = (title) =>
+    books.filter(b => b.title === title);
+
+  const getTotalCopies = (title) =>
+    getSameTitleBooks(title).length;
+
+  const getBorrowedCopies = (title) =>
+    getSameTitleBooks(title).filter(
+      b => b.status === "borrowed" || b.available === false
+    ).length;
+
+  const getAvailableCopies = (title) =>
+    getTotalCopies(title) - getBorrowedCopies(title);
+
+  const isOutOfStock = (book) =>
+    getAvailableCopies(book.title) <= 0;
 
   /* ---------- TIME ---------- */
+const getTime = (req) => {
+  if (req.status === "rejected") return "";
+  if (req.status === "pending") {
+    return req.requestDate
+      ? new Date(req.requestDate).toLocaleString()
+      : "-";
+  }
+  if (req.status === "approved" && !req.returnDate) {
+    return "Đang mượn";
+  }
 
-  const getTime = (req) => {
-    if (timeType === "request") return req.requestDate;
-    if (timeType === "approved" && req.status === "approved") return req.requestDate;
-    if (timeType === "rejected" && req.status === "rejected") return req.requestDate;
-    if (timeType === "returned") return req.returnDate;
-    return null;
-  };
+  if (req.approvedDate && req.returnDate) {
+    const start = req.approvedDate.split("T")[0];
+    const end = req.returnDate.split("T")[0];
 
-  /* ---------- USER ---------- */
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-  const getUser = (userId) => {
-    return users.find(u => isSame(u.id, userId));
-  };
+    const diffDays = Math.floor(
+      (endDate - startDate) / (1000 * 60 * 60 * 24)
+    );
 
-  /* ---------- BOOK ---------- */
+    return `${diffDays} ngày`;
+  }
 
-  const getBook = (bookId) => {
-    return books.find(b => isSame(b.id, bookId));
-  };
+  return "-";
+};
 
-  /* ---------- STATUS UI ---------- */
-
+  /* ---------- STATUS ---------- */
   const renderStatus = (status) => {
     const map = {
       pending: "warning",
@@ -83,29 +96,38 @@ export default function StaffBorrowRequests() {
     return <Badge bg={map[status] || "secondary"}>{status}</Badge>;
   };
 
-  /* ---------- CHECK BOOK BORROWED ---------- */
-
-  const isBookBeingBorrowed = (bookId) => {
-    return requests.some(r =>
-      isSame(r.bookId, bookId) &&
-      r.status === "approved"
-    );
-  };
-
-  /* ---------- APPROVE (FIX ID) ---------- */
+  /* ---------- ACTION ---------- */
 
   const handleApprove = async (req) => {
     try {
-      if (isBookBeingBorrowed(req.bookId)) {
-        alert("Book already borrowed!");
+      const book = getBook(req.bookId);
+      if (!book) return;
+
+      if (isOutOfStock(book)) {
+        alert("Hết sách!");
         return;
       }
 
-      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
-        status: "approved"
+      const availableBook = books.find(
+        b =>
+          b.title === book.title &&
+          b.status !== "borrowed" &&
+          b.available !== false
+      );
+
+      if (!availableBook) {
+        alert("Không còn bản nào!");
+        return;
+      }
+
+      await axios.patch(`${API}/borrows/${req.id}`, {
+        status: "approved",
+        bookId: availableBook.id,
+        approveDate: new Date().toISOString()
       });
 
-      await axios.patch(`${API}/books/${Number(req.bookId)}`, {
+      await axios.patch(`${API}/books/${availableBook.id}`, {
+        status: "borrowed",
         available: false
       });
 
@@ -113,16 +135,27 @@ export default function StaffBorrowRequests() {
 
     } catch (err) {
       console.error(err);
-      alert("Approve failed");
     }
   };
 
-  /* ---------- REJECT (FIX ID) ---------- */
-
+  /* ---------- FIX REJECT ---------- */
   const handleReject = async (req) => {
     try {
-      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
-        status: "rejected"
+      const reason = (rejectReasons[req.id] || "").trim();
+
+      if (!reason) {
+        alert("Nhập lý do reject!");
+        return;
+      }
+
+      await axios.patch(`${API}/borrows/${req.id}`, {
+        status: "rejected",
+        rejectReason: reason
+      });
+
+      setRejectReasons({
+        ...rejectReasons,
+        [req.id]: ""
       });
 
       loadData();
@@ -132,106 +165,122 @@ export default function StaffBorrowRequests() {
     }
   };
 
-  /* ---------- RETURN (FIX ID) ---------- */
-
-  const handleReturn = async (req) => {
-    try {
-      await axios.patch(`${API}/borrows/${Number(req.id)}`, {
-        status: "returned",
-        returnDate: new Date().toISOString()
-      });
-
-      await axios.patch(`${API}/books/${Number(req.bookId)}`, {
-        available: true
-      });
-
-      loadData();
-
-    } catch (err) {
-      console.error(err);
-    }
+  /* ---------- TOGGLE ---------- */
+  const toggleRow = (id) => {
+    setOpenRow({
+      ...openRow,
+      [id]: !openRow[id]
+    });
   };
 
   /* ---------- UI ---------- */
 
   return (
     <div className="container mt-4">
-
       <h2>Borrow Management</h2>
 
       <Table bordered hover className="text-center align-middle">
-
         <thead>
           <tr>
             <th>User</th>
             <th>Book</th>
             <th>Status</th>
-
-            <th>
-              Time
-              <Form.Select
-                size="sm"
-                value={timeType}
-                onChange={(e) => setTimeType(e.target.value)}
-              >
-                <option value="request">Request</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="returned">Returned</option>
-              </Form.Select>
-            </th>
-
+            <th>Time</th>
             <th>Action</th>
+            <th>Detail</th>
           </tr>
         </thead>
 
         <tbody>
-
           {requests.map((req) => {
             const user = getUser(req.userId);
             const book = getBook(req.bookId);
 
             return (
-              <tr key={String(req.id)}>
-                <td>{user?.username || "Unknown"}</td>
-                <td>{book?.title || "Unknown Book"}</td>
-                <td>{renderStatus(req.status)}</td>
-                <td>{formatDate(getTime(req))}</td>
+              <React.Fragment key={req.id}>
+                <tr>
+                  <td>{user?.username || "Unknown"}</td>
 
-                <td>
-                  {req.status === "pending" && (
-                    <>
-                      <Button
-                        variant="success"
-                        onClick={() => handleApprove(req)}
-                      >
-                        Approve
-                      </Button>{" "}
+                  <td>{book ? <b>{book.title}</b> : "Unknown"}</td>
 
-                      <Button
-                        variant="danger"
-                        onClick={() => handleReject(req)}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  )}
+                  <td>
+                    {renderStatus(req.status)}
+                  </td>
 
-                  {req.status === "approved" && (
+                  <td>{getTime(req)}</td>
+
+                  <td>
+                    {req.status === "pending" && (
+                      <>
+                        <Button
+                          variant="success"
+                          onClick={() => handleApprove(req)}
+                        >
+                          Approve
+                        </Button>{" "}
+
+                        <Form.Control
+                          size="sm"
+                          placeholder="Reason..."
+                          value={rejectReasons[req.id] || ""}
+                          onChange={(e) =>
+                            setRejectReasons({
+                              ...rejectReasons,
+                              [req.id]: e.target.value
+                            })
+                          }
+                          className="mt-1 mb-1"
+                        />
+
+                        <Button
+                          variant="danger"
+                          onClick={() => handleReject(req)}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </td>
+
+                  <td>
                     <Button
-                      variant="primary"
-                      onClick={() => handleReturn(req)}
+                      size="sm"
+                      variant="info"
+                      onClick={() => toggleRow(req.id)}
                     >
-                      Return
+                      {openRow[req.id] ? "Hide" : "Show"}
                     </Button>
-                  )}
-                </td>
-              </tr>
+                  </td>
+                </tr>
+
+                {/* DETAIL */}
+                <tr>
+                  <td colSpan={6} style={{ padding: 0 }}>
+                    <Collapse in={openRow[req.id]}>
+                      <div style={{ padding: "10px" }}>
+                        {book && (
+                          <>
+                            <b>{book.title}</b><br />
+                            Barcode: {book.barcode}<br />
+                            Total: {getTotalCopies(book.title)}<br />
+                            Borrowed: {getBorrowedCopies(book.title)}<br />
+                            Available: {getAvailableCopies(book.title)}
+                          </>
+                        )}
+
+                        {req.rejectReason && (
+                          <div style={{ color: "red", marginTop: "8px" }}>
+                            <b>Reject reason:</b> {req.rejectReason}
+                          </div>
+                        )}
+                      </div>
+                    </Collapse>
+                  </td>
+                </tr>
+              </React.Fragment>
             );
           })}
-
         </tbody>
-
       </Table>
     </div>
   );

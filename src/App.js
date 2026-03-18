@@ -29,6 +29,7 @@ import UserBorrowHistory from "./components/user/UserBorrowHistory";
 
 import Register from "./components/common/Register";
 import Login from "./components/common/Login";
+import ForgotPassword from "./components/common/ForgotPassword";
 import SupportChatWidget from "./components/common/SupportChatWidget";
 import UserSettings from "./components/common/UserSettings";
 
@@ -650,6 +651,7 @@ function App() {
 
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login setAuth={setAuth} />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route
             path="/admin/books"
