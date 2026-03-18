@@ -1,0 +1,128 @@
+/* Background */
+
+.profile-page{
+    min-height:90vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    padding:40px;
+}
+
+/* Card */
+
+.profile-card{
+    width:900px;
+    display:flex;
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 15px 40px rgba(0,0,0,0.25);
+}
+
+/* Left */
+
+.profile-left{
+    width:35%;
+    background:linear-gradient(135deg,#4facfe,#00f2fe);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:30px;
+    color:white;
+}
+
+.profile-avatar{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    object-fit:cover;
+    border:5px solid white;
+    margin-bottom:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.3);
+}
+
+.profile-role{
+    opacity:0.8;
+}
+
+/* Right */
+
+.profile-right{
+    flex:1;
+    padding:40px;
+}
+
+.profile-title{
+    font-size:26px;
+    margin-bottom:20px;
+    font-weight:700;
+}
+
+/* Field */
+
+.profile-field{
+    margin-bottom:15px;
+    display:flex;
+    flex-direction:column;
+}
+
+.profile-field label{
+    font-weight:600;
+    margin-bottom:5px;
+}
+
+.profile-field input{
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    transition:0.3s;
+}
+
+.profile-field input:focus{
+    border-color:#4facfe;
+    outline:none;
+}
+
+/* Buttons */
+
+.profile-btn{
+    margin-top:15px;
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+/* Edit */
+
+.edit-btn{
+    background:#4facfe;
+    color:white;
+}
+
+.edit-btn:hover{
+    background:#3b8dff;
+}
+
+/* Save */
+
+.save-btn{
+    background:#00c853;
+    color:white;
+}
+
+.save-btn:hover{
+    background:#00a844;
+}
+
+/* Loading */
+
+.loading{
+    text-align:center;
+    font-size:22px;
+    margin-top:100px;
+}

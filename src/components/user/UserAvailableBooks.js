@@ -13,18 +13,17 @@ function UserAvailableBooks({ auth }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedAuthor, setSelectedAuthor] = useState('');
+    const [wishlist, setWishlist] = useState([]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const [booksRes, borrowsRes, catsRes] = await Promise.all([
+        const fetchBooks = async () => {
+            const [booksRes, borrowsRes] = await Promise.all([
                 axios.get('http://localhost:9999/books'),
-                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`),
-                axios.get('http://localhost:9999/categories')
+                axios.get(`http://localhost:9999/borrows?userId=${auth.id}`)
             ]);
             setBooks(booksRes.data);
             setFilteredBooks(booksRes.data);
             setBorrowed(borrowsRes.data);
-            setCategories(catsRes.data);
         };
         fetchData();
     }, [auth.id]);
@@ -76,7 +75,7 @@ function UserAvailableBooks({ auth }) {
 
             await axios.post('http://localhost:9999/borrows', newBorrow);
             setMessage('Borrow request submitted successfully');
-            
+
             const borrowsRes = await axios.get(`http://localhost:9999/borrows?userId=${auth.id}`);
             setBorrowed(borrowsRes.data);
         } catch (error) {
@@ -84,22 +83,11 @@ function UserAvailableBooks({ auth }) {
         }
     };
 
-    const BookCard = ({ book }) => {
-        const isRequested = borrowed.some(b => b.bookId === book.id && ['pending', 'approved'].includes(b.status));
-        const isAvailable = book.available === true;
 
-        let renderButton;
-        if (!isAvailable) {
-            renderButton = <Button variant="danger" disabled className="w-100"><FaTimesCircle /> Not Available</Button>;
-        } else if (isRequested) {
-            renderButton = <Button variant="secondary" disabled className="w-100"><FaCheck /> Already Requested</Button>;
-        } else {
-            renderButton = (
-                <Button variant="primary" className="w-100" onClick={(e) => handleRequestBorrow(e, book.id)}>
-                    <FaBook /> Request Borrow
-                </Button>
-            );
-        }
+    const BookCard = ({ book }) => {
+        const isRequested = borrowed.some(b =>
+            b.bookId === book.id && ['pending', 'approved'].includes(b.status)
+        );
 
         return (
             <div className="col-md-3 mb-4">
@@ -110,7 +98,15 @@ function UserAvailableBooks({ auth }) {
                             <h5 className="card-title" style={{ fontSize: '1rem' }}>{book.title}</h5>
                             <p className="text-muted" style={{ fontSize: '0.8rem' }}>{book.author}</p>
                         </Link>
-                        {renderButton}
+                        <Button
+                            onClick={(e) => handleRequestBorrow(e, book.id)}
+                            disabled={isRequested}
+                            variant={isRequested ? "secondary" : "primary"}
+                            className="w-100"
+                            style={{ transition: 'background-color 0.3s' }}
+                        >
+                            {isRequested ? <><FaCheck /> Already Requested</> : <><FaBook /> Request Borrow</>}
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -132,8 +128,8 @@ function UserAvailableBooks({ auth }) {
                     </Form.Group>
                     <Form.Group>
                         <Form.Label>Filter by Author:</Form.Label>
-                        <Form.Check type="radio" label="All Authors" checked={selectedAuthor === ''} onChange={() => handleAuthorChange({target: {value: ''}})} />
-                        {uniqueAuthors.map((a, i) => <Form.Check key={i} type="radio" label={a} checked={selectedAuthor === a} onChange={() => handleAuthorChange({target: {value: a}})} />)}
+                        <Form.Check type="radio" label="All Authors" checked={selectedAuthor === ''} onChange={() => handleAuthorChange({ target: { value: '' } })} />
+                        {uniqueAuthors.map((a, i) => <Form.Check key={i} type="radio" label={a} checked={selectedAuthor === a} onChange={() => handleAuthorChange({ target: { value: a } })} />)}
                     </Form.Group>
                 </div>
                 <div className="col-md-9">

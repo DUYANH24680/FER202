@@ -35,8 +35,9 @@ import Register from "./components/common/Register";
 import Login from "./components/common/Login";
 import SupportChatWidget from "./components/common/SupportChatWidget";
 import UserSettings from "./components/common/UserSettings";
-
+import CustomerProfile from "./components/user/CustomerProfile";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
+import Wishlist from "./components/user/Wishlist";
 
 function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
   const [showNotif, setShowNotif] = useState(false);
@@ -420,6 +421,21 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
               }}>
                 ⏱️ My History
               </Link>
+              <Link to="/user/wishlist" style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "18px 24px",
+                color: isActive("/user/history") ? "#ec5b13" : "#cbd5e1",
+                textDecoration: "none",
+                background: isActive("/user/history") ? "rgba(236, 91, 19, 0.15)" : "transparent",
+                borderLeft: isActive("/user/history") ? "4px solid #ec5b13" : "4px solid transparent",
+                borderRadius: "0 8px 8px 0",
+                fontSize: "18px",
+                transition: "all 0.2s"
+              }}>
+                ⏱️ My Wishlist
+              </Link>
             </div>
           )}
         </nav>
@@ -607,6 +623,8 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                         key={idx}
                         onClick={() => {
                           setShowProfile(false);
+
+                          if (item.label === "Profile") { navigate('/profile');}
                           if (item.label === "Settings") { navigate('/settings'); }
                           if (item.isLogout) { handleLogout(); }
                         }}
@@ -797,6 +815,15 @@ function App() {
           />
 
           <Route
+            path="/profile"
+            element={
+               <ProtectedRoute auth={auth}>
+               <CustomerProfile auth={auth} />
+               </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/user/books"
             element={
               <ProtectedRoute auth={auth} allowedRole="user">
@@ -813,6 +840,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/user/wishlist"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="user">
+                <Wishlist auth={auth} />
+              </ProtectedRoute>
+            }
+          />
+
 
           <Route
             path="/user/books/:id"
