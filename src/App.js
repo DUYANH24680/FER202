@@ -18,6 +18,10 @@ import AdminCategories from "./components/admin/AdminCategories";
 import AdminImport from "./components/admin/AdminImport";
 import AdminInventoryReport from "./components/admin/AdminInventoryReport";
 
+import ManageRules from "./components/admin/ManageRules";
+import ManageLateBorrows from "./components/admin/ManageLateBorrows";
+import ManageUser from "./components/admin/ManageUser";
+
 import AdminSearchPro from "./components/staff/StaffSearchPro";
 import AdminBookStatus from "./components/staff/StaffBookStatus";
 import StaffBorrowRequests from "./components/staff/StaffBorrowRequests";
@@ -240,6 +244,38 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                   transition: "all 0.2s"
                 }}>
                   🏷️ Categories
+                </Link>
+                <Link to="/admin/managerule" style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "18px 24px",
+                  color: isActive("/admin/managerule") ? "#ec5b13" : "#cbd5e1",
+                  textDecoration: "none",
+                  background: isActive("/admin/managerule") ? "rgba(236, 91, 19, 0.15)" : "transparent",
+                  borderLeft: isActive("/admin/managerule") ? "4px solid #ec5b13" : "4px solid transparent",
+                  borderRadius: "0 8px 8px 0",
+                  fontSize: "18px",
+                  fontWeight: isActive("/admin/managerule") ? "600" : "500",
+                  transition: "all 0.2s"
+                }}>
+                  📜 Manage Rule
+                </Link>
+                <Link to="/admin/late-borrows" style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "18px 24px",
+                  color: isActive("/admin/late-borrows") ? "#ec5b13" : "#cbd5e1",
+                  textDecoration: "none",
+                  background: isActive("/admin/late-borrows") ? "rgba(236, 91, 19, 0.15)" : "transparent",
+                  borderLeft: isActive("/admin/late-borrows") ? "4px solid #ec5b13" : "4px solid transparent",
+                  borderRadius: "0 8px 8px 0",
+                  fontSize: "18px",
+                  fontWeight: isActive("/admin/late-borrows") ? "600" : "500",
+                  transition: "all 0.2s"
+                }}>
+                  ⚠ Late Returns
                 </Link>
               </div>
 
@@ -664,7 +700,25 @@ function App() {
             path="/admin/userlist"
             element={
               <ProtectedRoute auth={auth} allowedRole="admin">
-                <AdminUserList />
+                <ManageUser />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/admin/managerule"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="admin">
+                <ManageRules />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/late-borrows"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="admin">
+                <ManageLateBorrows />
               </ProtectedRoute>
             }
           />

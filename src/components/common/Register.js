@@ -29,7 +29,7 @@ function Register() {
 
       // Create new user with auto-incremented ID
       const newUser = {
-        id: nextId,
+        id: String(nextId),
         username,
         password,
         role: 'user'

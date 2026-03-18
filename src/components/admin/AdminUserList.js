@@ -39,7 +39,8 @@ function AdminUserList() {
                 await axios.put(`http://localhost:9999/users/${currentUser.id}`, currentUser);
             } else {
                 // Add New User
-                await axios.post('http://localhost:9999/users', currentUser);
+                const { id, ...newUser } = currentUser;
+                await axios.post('http://localhost:9999/users', newUser);
             }
             setShowModal(false);
             setCurrentUser({ id: null, username: '', password: '', role: '' }); // Reset form
