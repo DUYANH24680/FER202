@@ -9,7 +9,9 @@ function ManageRules() {
         maxBorrowDays: 14,
         maxBooksPerUser: 3,
         finePerDay: 5000,
-        pricePerBook: 10000
+        pricePerBook: 10000,
+        lostbook: 100000,
+        damagedbook: 50000
     };
 
     const [rules, setRules] = useState(defaultRules);
@@ -17,7 +19,6 @@ function ManageRules() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
-    // Lấy dữ liệu quy định từ server
     useEffect(() => {
         fetchRules();
     }, []);
@@ -30,8 +31,8 @@ function ManageRules() {
                 setRules(res.data);
             }
         } catch (err) {
-            console.error("Lỗi khi tải quy định:", err);
-            setMessage({ type: 'danger', text: 'Không thể tải quy định từ máy chủ. Đang sử dụng thiết lập mặc định.' });
+            console.error("Error loading rules:", err);
+            setMessage({ type: 'danger', text: 'Failed to load rules from server. Using default settings.' });
             setRules(defaultRules);
         } finally {
             setLoading(false);
@@ -40,14 +41,14 @@ function ManageRules() {
 
     const handleReset = () => {
         setRules(defaultRules);
-        setMessage({ type: 'info', text: 'Đã đặt lại về quy định mặc định. Nhấn Lưu để áp dụng.' });
+        setMessage({ type: 'info', text: 'Reset to default rules. Click Save to apply.' });
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setRules({
             ...rules,
-            [name]: Number(value) // Chuyển sang kiểu số
+            [name]: Number(value)
         });
     };
 
@@ -58,10 +59,10 @@ function ManageRules() {
 
         try {
             await axios.put('http://localhost:9999/settings/1', rules);
-            setMessage({ type: 'success', text: 'Cập nhật quy định thành công!' });
+            setMessage({ type: 'success', text: 'Rules updated successfully!' });
         } catch (err) {
-            console.error("Lỗi khi lưu quy định:", err);
-            setMessage({ type: 'danger', text: 'Lỗi! Không thể lưu thay đổi.' });
+            console.error("Error saving rules:", err);
+            setMessage({ type: 'danger', text: 'Error! Could not save changes.' });
         } finally {
             setSaving(false);
         }
@@ -71,7 +72,7 @@ function ManageRules() {
         return (
             <div className="text-center mt-5">
                 <Spinner animation="border" variant="primary" />
-                <p>Đang tải dữ liệu...</p>
+                <p>Loading data...</p>
             </div>
         );
     }
@@ -82,7 +83,7 @@ function ManageRules() {
                 <div className="col-md-6">
                     <Card className="shadow">
                         <Card.Header className="bg-primary text-white">
-                            <h4 className="mb-0">Thiết lập quy định mượn sách</h4>
+                            <h4 className="mb-0">Borrowing Rules Settings</h4>
                         </Card.Header>
                         <Card.Body>
                             {message.text && (
@@ -92,9 +93,9 @@ function ManageRules() {
                             )}
 
                             <Form onSubmit={handleSave}>
-                                {/* Số ngày mượn tối đa */}
+                                {/* Max borrow days */}
                                 <Form.Group className="mb-3">
-                                    <Form.Label className="fw-bold">Số ngày mượn tối đa</Form.Label>
+                                    <Form.Label className="fw-bold">Maximum Borrow Days</Form.Label>
                                     <InputGroup>
                                         <Form.Control
                                             type="number"
@@ -104,16 +105,16 @@ function ManageRules() {
                                             min="1"
                                             required
                                         />
-                                        <InputGroup.Text>ngày</InputGroup.Text>
+                                        <InputGroup.Text>days</InputGroup.Text>
                                     </InputGroup>
                                     <Form.Text className="text-muted">
-                                        Thời gian tối đa một người dùng có thể giữ sách.
+                                        Maximum time a user can keep a book.
                                     </Form.Text>
                                 </Form.Group>
 
-                                {/* Số lượng sách tối đa */}
+                                {/* Max books per user */}
                                 <Form.Group className="mb-3">
-                                    <Form.Label className="fw-bold">Số lượng sách tối đa</Form.Label>
+                                    <Form.Label className="fw-bold">Maximum Books Per User</Form.Label>
                                     <InputGroup>
                                         <Form.Control
                                             type="number"
@@ -123,16 +124,16 @@ function ManageRules() {
                                             min="1"
                                             required
                                         />
-                                        <InputGroup.Text>cuốn</InputGroup.Text>
+                                        <InputGroup.Text>books</InputGroup.Text>
                                     </InputGroup>
                                     <Form.Text className="text-muted">
-                                        Số lượng sách tối đa một người dùng có thể mượn cùng lúc.
+                                        Maximum number of books a user can borrow at the same time.
                                     </Form.Text>
                                 </Form.Group>
 
-                                {/* Tiền phạt mỗi ngày */}
-                                <Form.Group className="mb-4">
-                                    <Form.Label className="fw-bold">Tiền phạt quá hạn (mỗi ngày)</Form.Label>
+                                {/* Fine per day */}
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="fw-bold">Overdue Fine (per day)</Form.Label>
                                     <InputGroup>
                                         <Form.Control
                                             type="number"
@@ -143,16 +144,16 @@ function ManageRules() {
                                             step="500"
                                             required
                                         />
-                                        <InputGroup.Text>VNĐ</InputGroup.Text>
+                                        <InputGroup.Text>VND</InputGroup.Text>
                                     </InputGroup>
                                     <Form.Text className="text-muted">
-                                        Số tiền phạt cộng thêm cho mỗi ngày trả sách chậm.
+                                        Fine amount added for each day a book is returned late.
                                     </Form.Text>
                                 </Form.Group>
 
-                                {/* Giá mượn mỗi quyển */}
-                                <Form.Group className="mb-4">
-                                    <Form.Label className="fw-bold">Giá mượn mỗi quyển</Form.Label>
+                                {/* Price per book */}
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="fw-bold">Borrow Price Per Book</Form.Label>
                                     <InputGroup>
                                         <Form.Control
                                             type="number"
@@ -163,10 +164,50 @@ function ManageRules() {
                                             step="1000"
                                             required
                                         />
-                                        <InputGroup.Text>VNĐ / quyển</InputGroup.Text>
+                                        <InputGroup.Text>VND / book</InputGroup.Text>
                                     </InputGroup>
                                     <Form.Text className="text-muted">
-                                        Giá cố định cho mỗi quyển sách khi mượn.
+                                        Fixed price per book when borrowing.
+                                    </Form.Text>
+                                </Form.Group>
+
+                                {/* Lost book fee */}
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="fw-bold">Lost Book Fee</Form.Label>
+                                    <InputGroup>
+                                        <Form.Control
+                                            type="number"
+                                            name="lostbook"
+                                            value={rules.lostbook}
+                                            onChange={handleChange}
+                                            min="0"
+                                            step="1000"
+                                            required
+                                        />
+                                        <InputGroup.Text>VND / book</InputGroup.Text>
+                                    </InputGroup>
+                                    <Form.Text className="text-muted">
+                                        Amount a user must pay when a book is lost.
+                                    </Form.Text>
+                                </Form.Group>
+
+                                {/* Damaged book fee */}
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-bold">Damaged Book Fee</Form.Label>
+                                    <InputGroup>
+                                        <Form.Control
+                                            type="number"
+                                            name="damagedbook"
+                                            value={rules.damagedbook}
+                                            onChange={handleChange}
+                                            min="0"
+                                            step="1000"
+                                            required
+                                        />
+                                        <InputGroup.Text>VND / book</InputGroup.Text>
+                                    </InputGroup>
+                                    <Form.Text className="text-muted">
+                                        Amount a user must pay when a book is damaged.
                                     </Form.Text>
                                 </Form.Group>
 
@@ -174,16 +215,16 @@ function ManageRules() {
 
                                 <div className="d-flex justify-content-between">
                                     <Button variant="outline-secondary" onClick={handleReset} disabled={saving}>
-                                        <FaRedo /> Mặc định
+                                        <FaRedo /> Reset to Default
                                     </Button>
                                     <Button variant="primary" type="submit" disabled={saving}>
-                                        {saving ? <Spinner size="sm" animation="border" /> : <><FaSave /> Lưu thay đổi</>}
+                                        {saving ? <Spinner size="sm" animation="border" /> : <><FaSave /> Save Changes</>}
                                     </Button>
                                 </div>
                             </Form>
                         </Card.Body>
                         <Card.Footer className="text-muted small">
-                            <FaInfoCircle /> Thay đổi này sẽ áp dụng ngay lập tức cho các yêu cầu mượn mới.
+                            <FaInfoCircle /> Changes will take effect immediately for new borrow requests.
                         </Card.Footer>
                     </Card>
                 </div>

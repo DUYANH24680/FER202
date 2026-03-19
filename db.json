@@ -57,7 +57,7 @@
       "locked": false
     },
     {
-      "id": 6,
+      "id": "6",
       "username": "Duyanh",
       "password": "1",
       "role": "user"
@@ -356,7 +356,7 @@
       "available": true,
       "image": "https://cdn0.fahasa.com/media/catalog/product/8/1/81q2zlun1sl.jpg",
       "barcode": "HP-01-01",
-      "status": null,
+      "status": "Lost",
       "categoryId": "8",
       "seriesId": "3",
       "statusDate": null,
@@ -3172,11 +3172,91 @@
       "id": "1",
       "bookId": "3",
       "userId": "3",
-      "status": "pending",
+      "status": "late",
       "requestDate": "2026-03-18T18:16:31.352Z",
-      "returnDate": "2026-04-01T18:16:31.352Z",
+      "returnDate": "2026-04-10T18:16:31.352Z",
       "quantity": 1,
       "totalPrice": 11000
+    },
+    {
+      "id": "2",
+      "bookId": "1",
+      "userId": "2",
+      "status": "returned",
+      "requestDate": "2026-02-01T09:00:00.000Z",
+      "returnDate": "2026-02-15T09:00:00.000Z",
+      "quantity": 1,
+      "totalPrice": 8000
+    },
+    {
+      "id": "3",
+      "bookId": "2",
+      "userId": "4",
+      "status": "returned",
+      "requestDate": "2026-01-10T10:00:00.000Z",
+      "returnDate": "2026-01-20T10:00:00.000Z",
+      "quantity": 2,
+      "totalPrice": 16000
+    },
+    {
+      "id": "4",
+      "bookId": "4",
+      "userId": "5",
+      "status": "damaged",
+      "requestDate": "2026-02-20T14:00:00.000Z",
+      "returnDate": "2026-03-05T14:00:00.000Z",
+      "quantity": 1,
+      "totalPrice": 12000
+    },
+    {
+      "id": "5",
+      "bookId": "5",
+      "userId": "3",
+      "status": "lost",
+      "requestDate": "2026-01-25T11:00:00.000Z",
+      "returnDate": "2026-02-10T11:00:00.000Z",
+      "quantity": 1,
+      "totalPrice": 15000
+    },
+    {
+      "id": "6",
+      "bookId": "1",
+      "userId": "2",
+      "status": "late",
+      "requestDate": "2026-03-15T08:00:00.000Z",
+      "returnDate": "2026-04-01T08:00:00.000Z",
+      "quantity": 2,
+      "totalPrice": 22000
+    },
+    {
+      "id": "7",
+      "bookId": "2",
+      "userId": "3",
+      "status": "returned",
+      "requestDate": "2026-02-10T09:30:00.000Z",
+      "returnDate": "2026-02-25T09:30:00.000Z",
+      "quantity": 1,
+      "totalPrice": 9000
+    },
+    {
+      "id": "8",
+      "bookId": "4",
+      "userId": "4",
+      "status": "returned",
+      "requestDate": "2026-01-05T13:00:00.000Z",
+      "returnDate": "2026-01-15T13:00:00.000Z",
+      "quantity": 3,
+      "totalPrice": 33000
+    },
+    {
+      "id": "9",
+      "bookId": "5",
+      "userId": "5",
+      "status": "damaged",
+      "requestDate": "2026-03-01T10:00:00.000Z",
+      "returnDate": "2026-03-20T10:00:00.000Z",
+      "quantity": 1,
+      "totalPrice": 14000
     }
   ],
   "messages": [
@@ -3188,7 +3268,7 @@
       "text": "Hi",
       "timestamp": "2026-03-15T00:49:40.229Z",
       "read": true,
-      "id": 1
+      "id": "1"
     },
     {
       "senderId": "3",
@@ -3198,7 +3278,7 @@
       "text": "ád",
       "timestamp": "2026-03-15T00:51:18.264Z",
       "read": true,
-      "id": 2
+      "id": "2"
     },
     {
       "senderId": "system",
@@ -3209,7 +3289,7 @@
       "timestamp": "2026-03-15T00:51:19.297Z",
       "read": true,
       "isSystem": true,
-      "id": 3
+      "id": "3"
     },
     {
       "senderId": "5",
@@ -3219,7 +3299,7 @@
       "text": "d",
       "timestamp": "2026-03-15T00:53:32.124Z",
       "read": true,
-      "id": 4
+      "id": "4"
     },
     {
       "senderId": "system",
@@ -3230,7 +3310,7 @@
       "timestamp": "2026-03-15T00:53:33.163Z",
       "read": true,
       "isSystem": true,
-      "id": 5
+      "id": "5"
     },
     {
       "senderId": "3",
@@ -3240,7 +3320,7 @@
       "text": "a",
       "timestamp": "2026-03-15T00:56:10.347Z",
       "read": true,
-      "id": 6
+      "id": "6"
     },
     {
       "senderId": "system",
@@ -3251,7 +3331,7 @@
       "timestamp": "2026-03-15T00:56:11.382Z",
       "read": true,
       "isSystem": true,
-      "id": 7
+      "id": "7"
     },
     {
       "senderId": "3",
@@ -3261,7 +3341,7 @@
       "text": "a",
       "timestamp": "2026-03-15T00:56:14.552Z",
       "read": true,
-      "id": 8
+      "id": "8"
     },
     {
       "senderId": "system",
@@ -3272,7 +3352,7 @@
       "timestamp": "2026-03-15T00:56:15.603Z",
       "read": true,
       "isSystem": true,
-      "id": 9
+      "id": "9"
     },
     {
       "senderId": "3",
@@ -3282,7 +3362,7 @@
       "text": "a",
       "timestamp": "2026-03-15T00:56:22.034Z",
       "read": true,
-      "id": 10
+      "id": "10"
     },
     {
       "senderId": "system",
@@ -3293,7 +3373,7 @@
       "timestamp": "2026-03-15T00:56:23.076Z",
       "read": true,
       "isSystem": true,
-      "id": 11
+      "id": "11"
     },
     {
       "senderId": "2",
@@ -3303,7 +3383,7 @@
       "text": "a",
       "timestamp": "2026-03-15T00:56:38.634Z",
       "read": false,
-      "id": 12
+      "id": "12"
     },
     {
       "senderId": "2",
@@ -3313,7 +3393,7 @@
       "text": "123",
       "timestamp": "2026-03-15T00:57:11.377Z",
       "read": true,
-      "id": 13
+      "id": "13"
     },
     {
       "senderId": "3",
@@ -3323,7 +3403,7 @@
       "text": "s",
       "timestamp": "2026-03-15T00:57:31.909Z",
       "read": true,
-      "id": 14
+      "id": "14"
     },
     {
       "senderId": "system",
@@ -3334,7 +3414,7 @@
       "timestamp": "2026-03-15T00:57:32.936Z",
       "read": true,
       "isSystem": true,
-      "id": 15
+      "id": "15"
     },
     {
       "senderId": "system",
@@ -3345,7 +3425,7 @@
       "timestamp": "2026-03-15T00:59:44.264Z",
       "read": true,
       "isSystem": true,
-      "id": 16
+      "id": "16"
     },
     {
       "senderId": "6",
@@ -3355,7 +3435,7 @@
       "text": "a",
       "timestamp": "2026-03-15T00:59:46.914Z",
       "read": true,
-      "id": 17
+      "id": "17"
     },
     {
       "senderId": "system",
@@ -3366,7 +3446,7 @@
       "timestamp": "2026-03-15T00:59:47.949Z",
       "read": true,
       "isSystem": true,
-      "id": 18
+      "id": "18"
     },
     {
       "senderId": "6",
@@ -3376,7 +3456,7 @@
       "text": "a",
       "timestamp": "2026-03-15T00:59:49.201Z",
       "read": true,
-      "id": 19
+      "id": "19"
     },
     {
       "senderId": "1",
@@ -3387,12 +3467,12 @@
       "text": "das",
       "timestamp": "2026-03-15T01:36:57.165Z",
       "read": true,
-      "id": 20
+      "id": "20"
     }
   ],
   "reviews": [
     {
-      "id": 1,
+      "id": "1",
       "userId": "3",
       "bookId": "3",
       "rating": 5,
@@ -3470,8 +3550,10 @@
       "id": "1",
       "maxBorrowDays": 14,
       "maxBooksPerUser": 5,
-      "finePerDay": 5000,
-      "pricePerBook": 11000
+      "finePerDay": 10000,
+      "pricePerBook": 11000,
+      "lostbook": 200000,
+      "damagedbook": 55000
     }
   ]
 }

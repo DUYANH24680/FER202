@@ -40,7 +40,7 @@ function Login({ setAuth }) {
           navigate("/staff/requests");
         }
         else {
-          navigate("/user/books");
+          navigate("/user/terms");
         }
 
       }

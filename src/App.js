@@ -7,7 +7,7 @@ import {
   Link,
   Navigate,
   useLocation,
-  useNavigate
+  useNavigate,
 } from "react-router-dom";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -21,7 +21,7 @@ import AdminInventoryReport from "./components/admin/AdminInventoryReport";
 import ManageRules from "./components/admin/ManageRules";
 import ManageLateBorrows from "./components/admin/ManageLateBorrows";
 import ManageUser from "./components/admin/ManageUser";
-
+import UserTerms from "./components/user/UserTerms";
 import AdminSearchPro from "./components/staff/StaffSearchPro";
 import AdminBookStatus from "./components/staff/StaffBookStatus";
 import StaffBorrowRequests from "./components/staff/StaffBorrowRequests";
@@ -30,7 +30,7 @@ import StaffCategoryBooks from "./components/staff/StaffCategoryBooks";
 import UserAvailableBooks from "./components/user/UserAvailableBooks";
 import UserBookDetails from "./components/user/UserBookDetails";
 import UserBorrowHistory from "./components/user/UserBorrowHistory";
-
+import ManageBookReturn from "./components/admin/ManageBookReturn";
 import Register from "./components/common/Register";
 import Login from "./components/common/Login";
 import SupportChatWidget from "./components/common/SupportChatWidget";
@@ -60,7 +60,9 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
         if (auth.role === "admin") {
           // Admin sees reports, imports, and new users
           const booksRes = await axios.get("http://localhost:9999/books");
-          const damagedLost = booksRes.data.filter(b => b.status === "damaged" || b.status === "lost");
+          const damagedLost = booksRes.data.filter(
+            (b) => b.status === "damaged" || b.status === "lost",
+          );
           const usersRes = await axios.get("http://localhost:9999/users");
 
           if (damagedLost.length > 0) {
@@ -69,7 +71,7 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
               title: "Inventory Report Alert",
               message: `${damagedLost.length} books are marked as damaged or lost.`,
               date: new Date().toISOString(),
-              link: "/admin/inventory-report"
+              link: "/admin/inventory-report",
             });
           }
           if (usersRes.data.length > 0) {
@@ -78,7 +80,7 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
               title: "New User Registration",
               message: `New account created: ${usersRes.data[usersRes.data.length - 1].username}.`,
               date: new Date().toISOString(),
-              link: "/admin/userlist"
+              link: "/admin/userlist",
             });
           }
           myNotifs.push({
@@ -86,34 +88,35 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
             title: "Import Data",
             message: `System ready for new batch imports.`,
             date: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-            link: "/admin/import"
+            link: "/admin/import",
           });
         } else if (auth.role === "staff") {
           // Staff sees pending requests
-          const pending = allBorrows.filter(b => b.status === "pending");
-          myNotifs = pending.map(p => ({
+          const pending = allBorrows.filter((b) => b.status === "pending");
+          myNotifs = pending.map((p) => ({
             id: p.id,
             title: "New Borrow Request",
             message: `User #${p.userId} requested a book.`,
             date: p.requestDate || new Date().toISOString(),
-            link: "/staff/requests"
+            link: "/staff/requests",
           }));
         } else {
           // User sees updates on their own requests
-          const myUpdates = allBorrows.filter(b => b.userId === String(auth.id) && b.status !== "pending");
-          myNotifs = myUpdates.map(p => ({
+          const myUpdates = allBorrows.filter(
+            (b) => b.userId === String(auth.id) && b.status !== "pending",
+          );
+          myNotifs = myUpdates.map((p) => ({
             id: p.id,
             title: `Request ${p.status}`,
             message: `Your borrow request for book #${p.bookId} was ${p.status}.`,
             date: p.requestDate || new Date().toISOString(),
-            link: "/user/history"
+            link: "/user/history",
           }));
         }
 
         // Sort latest first
         myNotifs.sort((a, b) => new Date(b.date) - new Date(a.date));
         setNotifications(myNotifs);
-
       } catch (err) {
         console.error("Error fetching notifications:", err);
       }
@@ -123,7 +126,6 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
     // Optional: poll every 30s
     // const interval = setInterval(fetchNotifs, 30000);
     // return () => clearInterval(interval);
-
   }, [auth]);
 
   const unreadCount = notifications.length;
@@ -141,301 +143,533 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-color)" }}>
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        background: "var(--bg-color)",
+      }}
+    >
       {/* Sidebar */}
-      <aside style={{
-        width: "320px",
-        background: "var(--sidebar-bg)",
-        color: "white",
-        overflowY: "auto",
-        position: "fixed",
-        height: "100vh",
-        left: 0,
-        top: 0,
-        zIndex: 1000,
-        borderRight: "1px solid rgba(255,255,255,0.05)"
-      }}>
+      <aside
+        style={{
+          width: "320px",
+          background: "var(--sidebar-bg)",
+          color: "white",
+          overflowY: "auto",
+          position: "fixed",
+          height: "100vh",
+          left: 0,
+          top: 0,
+          zIndex: 1000,
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
         {/* Logo */}
-        <div style={{
-          padding: "32px 24px",
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-          borderBottom: "1px solid rgba(255,255,255,0.05)"
-        }}>
-          <div style={{
-            width: "50px",
-            height: "50px",
-            background: "var(--primary)",
-            borderRadius: "12px",
+        <div
+          style={{
+            padding: "32px 24px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            fontSize: "28px",
-            boxShadow: "0 0 20px rgba(236, 91, 19, 0.3)"
-          }}>
+            gap: "16px",
+            borderBottom: "1px solid rgba(255,255,255,0.05)",
+          }}
+        >
+          <div
+            style={{
+              width: "50px",
+              height: "50px",
+              background: "var(--primary)",
+              borderRadius: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "28px",
+              boxShadow: "0 0 20px rgba(236, 91, 19, 0.3)",
+            }}
+          >
             📚
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", letterSpacing: "-0.5px" }}>LibTrack</h2>
-            <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#94a3b8", textTransform: "uppercase", fontWeight: "600", letterSpacing: "1px" }}>Workspace</p>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "24px",
+                fontWeight: "800",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              LibTrack
+            </h2>
+            <p
+              style={{
+                margin: "2px 0 0 0",
+                fontSize: "12px",
+                color: "#94a3b8",
+                textTransform: "uppercase",
+                fontWeight: "600",
+                letterSpacing: "1px",
+              }}
+            >
+              Workspace
+            </p>
           </div>
         </div>
 
         {/* Navigation */}
         <nav style={{ padding: "20px 0", flex: 1 }}>
           {/* Admin Sections */}
-          {(isAdminRoute || auth?.role === "admin") && auth?.role === "admin" && (
-            <>
-              {/* GENERAL */}
-              <div style={{ paddingBottom: "20px" }}>
-                <p style={{ fontSize: "15px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "20px", letterSpacing: "0.5px" }}>General</p>
-                <Link to="/admin/books" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/books") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/books") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/books") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/books") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  📖 Manage Books
-                </Link>
-              </div>
+          {(isAdminRoute || auth?.role === "admin") &&
+            auth?.role === "admin" && (
+              <>
+                {/* GENERAL */}
+                <div style={{ paddingBottom: "20px" }}>
+                  <p
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "600",
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                      margin: "0 0 12px 0",
+                      paddingLeft: "20px",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    General
+                  </p>
+                  <Link
+                    to="/admin/books"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color: isActive("/admin/books") ? "white" : "#94a3b8",
+                      textDecoration: "none",
+                      background: isActive("/admin/books")
+                        ? "var(--primary)"
+                        : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight: isActive("/admin/books") ? "600" : "500",
+                      transition: "all 0.2s",
+                      boxShadow: isActive("/admin/books")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                    }}
+                  >
+                    📖 Manage Books
+                  </Link>
+                </div>
 
-              {/* OPERATIONS */}
-              <div style={{ paddingBottom: "20px", borderTop: "1px solid #334155", paddingTop: "20px" }}>
-                <p style={{ fontSize: "15px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "20px", letterSpacing: "0.5px" }}>Operations</p>
-                <Link to="/admin/userlist" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/userlist") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/userlist") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/userlist") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/userlist") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  👥 User List
-                </Link>
-                <Link to="/admin/categories" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/categories") || location.pathname.startsWith("/category/") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  🏷️ Categories
-                </Link>
-                <Link to="/admin/managerule" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/managerule") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/managerule") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/managerule") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/managerule") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  📜 Manage Rule
-                </Link>
-                <Link to="/admin/late-borrows" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/late-borrows") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/late-borrows") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/late-borrows") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/late-borrows") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  ⚠ Late Returns
-                </Link>
-              </div>
+                {/* OPERATIONS */}
+                <div
+                  style={{
+                    paddingBottom: "20px",
+                    borderTop: "1px solid #334155",
+                    paddingTop: "20px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "600",
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                      margin: "0 0 12px 0",
+                      paddingLeft: "20px",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    Operations
+                  </p>
+                  <Link
+                    to="/admin/userlist"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color: isActive("/admin/userlist") ? "white" : "#94a3b8",
+                      textDecoration: "none",
+                      background: isActive("/admin/userlist")
+                        ? "var(--primary)"
+                        : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight: isActive("/admin/userlist") ? "600" : "500",
+                      transition: "all 0.2s",
+                      boxShadow: isActive("/admin/userlist")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                    }}
+                  >
+                    👥 User List
+                  </Link>
+                  <Link
+                    to="/admin/categories"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color:
+                        isActive("/admin/categories") ||
+                        location.pathname.startsWith("/category/")
+                          ? "white"
+                          : "#94a3b8",
+                      textDecoration: "none",
+                      background:
+                        isActive("/admin/categories") ||
+                        location.pathname.startsWith("/category/")
+                          ? "var(--primary)"
+                          : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight:
+                        isActive("/admin/categories") ||
+                        location.pathname.startsWith("/category/")
+                          ? "600"
+                          : "500",
+                      transition: "all 0.2s",
+                      boxShadow:
+                        isActive("/admin/categories") ||
+                        location.pathname.startsWith("/category/")
+                          ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                          : "none",
+                    }}
+                  >
+                    🏷️ Categories
+                  </Link>
+                  <Link
+                    to="/admin/managerule"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color: isActive("/admin/managerule")
+                        ? "white"
+                        : "#94a3b8",
+                      textDecoration: "none",
+                      background: isActive("/admin/managerule")
+                        ? "var(--primary)"
+                        : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight: isActive("/admin/managerule") ? "600" : "500",
+                      transition: "all 0.2s",
+                      boxShadow: isActive("/admin/managerule")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                    }}
+                  >
+                    📜 Manage Rule
+                  </Link>
 
-              {/* SYSTEM */}
-              <div style={{ paddingBottom: "20px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "20px" }}>
-                <p style={{ fontSize: "14px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "32px", letterSpacing: "1px" }}>System</p>
-                <Link to="/admin/import" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/import") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/import") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/import") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/import") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  📥 Import Data
-                </Link>
-                <Link to="/admin/inventory-report" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  color: isActive("/admin/inventory-report") ? "white" : "#94a3b8",
-                  textDecoration: "none",
-                  background: isActive("/admin/inventory-report") ? "var(--primary)" : "transparent",
-                  borderRadius: "12px",
-                  margin: "0 16px",
-                  fontSize: "16px",
-                  fontWeight: isActive("/admin/inventory-report") ? "600" : "500",
-                  transition: "all 0.2s",
-                  boxShadow: isActive("/admin/inventory-report") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-                }}>
-                  📊 Reports
-                </Link>
-              </div>
-            </>
-          )}
+                  <Link
+                    to="/admin/book-return"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color: isActive("/admin/book-return")
+                        ? "white"
+                        : "#94a3b8",
+                      textDecoration: "none",
+                      background: isActive("/admin/book-return")
+                        ? "var(--primary)"
+                        : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight: isActive("/admin/book-return")
+                        ? "600"
+                        : "500",
+                      transition: "all 0.2s",
+                      boxShadow: isActive("/admin/book-return")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                    }}
+                  >
+                    📦 Book Returns
+                  </Link>
+                </div>
+
+                {/* SYSTEM */}
+                <div
+                  style={{
+                    paddingBottom: "20px",
+                    borderTop: "1px solid rgba(255,255,255,0.05)",
+                    paddingTop: "20px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#64748b",
+                      textTransform: "uppercase",
+                      margin: "0 0 12px 0",
+                      paddingLeft: "32px",
+                      letterSpacing: "1px",
+                    }}
+                  >
+                    System
+                  </p>
+                  <Link
+                    to="/admin/import"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color: isActive("/admin/import") ? "white" : "#94a3b8",
+                      textDecoration: "none",
+                      background: isActive("/admin/import")
+                        ? "var(--primary)"
+                        : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight: isActive("/admin/import") ? "600" : "500",
+                      transition: "all 0.2s",
+                      boxShadow: isActive("/admin/import")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                    }}
+                  >
+                    📥 Import Data
+                  </Link>
+                  <Link
+                    to="/admin/inventory-report"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "16px 24px",
+                      color: isActive("/admin/inventory-report")
+                        ? "white"
+                        : "#94a3b8",
+                      textDecoration: "none",
+                      background: isActive("/admin/inventory-report")
+                        ? "var(--primary)"
+                        : "transparent",
+                      borderRadius: "12px",
+                      margin: "0 16px",
+                      fontSize: "16px",
+                      fontWeight: isActive("/admin/inventory-report")
+                        ? "600"
+                        : "500",
+                      transition: "all 0.2s",
+                      boxShadow: isActive("/admin/inventory-report")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                    }}
+                  >
+                    📊 Reports
+                  </Link>
+                </div>
+              </>
+            )}
 
           {/* Staff Sections */}
-          {(isStaffRoute || location.pathname.startsWith("/category")) && auth?.role === "staff" && (
-            <div style={{ paddingBottom: "20px" }}>
-              <p style={{ fontSize: "14px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "32px", letterSpacing: "1px" }}>Operations</p>
+          {(isStaffRoute || location.pathname.startsWith("/category")) &&
+            auth?.role === "staff" && (
+              <div style={{ paddingBottom: "20px" }}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: "#64748b",
+                    textTransform: "uppercase",
+                    margin: "0 0 12px 0",
+                    paddingLeft: "32px",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  Operations
+                </p>
 
-              <Link to="/staff/book-status" style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                color: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "white" : "#94a3b8",
-                textDecoration: "none",
-                background: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "var(--primary)" : "transparent",
-                borderRadius: "12px",
-                margin: "0 16px",
-                fontSize: "16px",
-                fontWeight: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "600" : "500",
-                transition: "all 0.2s",
-                boxShadow: isActive("/staff/book-status") || location.pathname.startsWith("/category/") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-              }}>
-                📊 Categories (Books)
-              </Link>
+                <Link
+                  to="/staff/book-status"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    color:
+                      isActive("/staff/book-status") ||
+                      location.pathname.startsWith("/category/")
+                        ? "white"
+                        : "#94a3b8",
+                    textDecoration: "none",
+                    background:
+                      isActive("/staff/book-status") ||
+                      location.pathname.startsWith("/category/")
+                        ? "var(--primary)"
+                        : "transparent",
+                    borderRadius: "12px",
+                    margin: "0 16px",
+                    fontSize: "16px",
+                    fontWeight:
+                      isActive("/staff/book-status") ||
+                      location.pathname.startsWith("/category/")
+                        ? "600"
+                        : "500",
+                    transition: "all 0.2s",
+                    boxShadow:
+                      isActive("/staff/book-status") ||
+                      location.pathname.startsWith("/category/")
+                        ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                        : "none",
+                  }}
+                >
+                  📊 Categories (Books)
+                </Link>
 
-              <Link to="/staff/requests" style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                color: isActive("/staff/requests") ? "white" : "#94a3b8",
-                textDecoration: "none",
-                background: isActive("/staff/requests") ? "var(--primary)" : "transparent",
-                borderRadius: "12px",
-                margin: "0 16px",
-                fontSize: "16px",
-                fontWeight: isActive("/staff/requests") ? "600" : "500",
-                transition: "all 0.2s",
-                boxShadow: isActive("/staff/requests") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-              }}>
-                📋 Borrow Requests
-              </Link>
-              <Link to="/staff/search-pro" style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                color: isActive("/staff/search-pro") ? "white" : "#94a3b8",
-                textDecoration: "none",
-                background: isActive("/staff/search-pro") ? "var(--primary)" : "transparent",
-                borderRadius: "12px",
-                margin: "0 16px",
-                fontSize: "16px",
-                fontWeight: isActive("/staff/search-pro") ? "600" : "500",
-                transition: "all 0.2s",
-                boxShadow: isActive("/staff/search-pro") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-              }}>
-                🔍 Search Pro
-              </Link>
-            </div>
-          )}
+                <Link
+                  to="/staff/requests"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    color: isActive("/staff/requests") ? "white" : "#94a3b8",
+                    textDecoration: "none",
+                    background: isActive("/staff/requests")
+                      ? "var(--primary)"
+                      : "transparent",
+                    borderRadius: "12px",
+                    margin: "0 16px",
+                    fontSize: "16px",
+                    fontWeight: isActive("/staff/requests") ? "600" : "500",
+                    transition: "all 0.2s",
+                    boxShadow: isActive("/staff/requests")
+                      ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                      : "none",
+                  }}
+                >
+                  📋 Borrow Requests
+                </Link>
+                <Link
+                  to="/staff/search-pro"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    color: isActive("/staff/search-pro") ? "white" : "#94a3b8",
+                    textDecoration: "none",
+                    background: isActive("/staff/search-pro")
+                      ? "var(--primary)"
+                      : "transparent",
+                    borderRadius: "12px",
+                    margin: "0 16px",
+                    fontSize: "16px",
+                    fontWeight: isActive("/staff/search-pro") ? "600" : "500",
+                    transition: "all 0.2s",
+                    boxShadow: isActive("/staff/search-pro")
+                      ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                      : "none",
+                  }}
+                >
+                  🔍 Search Pro
+                </Link>
+              </div>
+            )}
 
           {/* User Sections */}
           {auth?.role === "user" && !isAdminRoute && !isStaffRoute && (
             <div style={{ paddingBottom: "20px" }}>
-              <p style={{ fontSize: "14px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", margin: "0 0 12px 0", paddingLeft: "32px", letterSpacing: "1px" }}>My Library</p>
-              <Link to="/user/books" style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                color: isActive("/user/books") ? "white" : "#94a3b8",
-                textDecoration: "none",
-                background: isActive("/user/books") ? "var(--primary)" : "transparent",
-                borderRadius: "12px",
-                margin: "0 16px",
-                fontSize: "16px",
-                fontWeight: isActive("/user/books") ? "600" : "500",
-                transition: "all 0.2s",
-                boxShadow: isActive("/user/books") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-              }}>
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  margin: "0 0 12px 0",
+                  paddingLeft: "32px",
+                  letterSpacing: "1px",
+                }}
+              >
+                My Library
+              </p>
+              <Link
+                to="/user/books"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "16px 24px",
+                  color: isActive("/user/books") ? "white" : "#94a3b8",
+                  textDecoration: "none",
+                  background: isActive("/user/books")
+                    ? "var(--primary)"
+                    : "transparent",
+                  borderRadius: "12px",
+                  margin: "0 16px",
+                  fontSize: "16px",
+                  fontWeight: isActive("/user/books") ? "600" : "500",
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/user/books")
+                    ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                    : "none",
+                }}
+              >
                 🏠 Home
               </Link>
-              <Link to="/user/history" style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                color: isActive("/user/history") ? "white" : "#94a3b8",
-                textDecoration: "none",
-                background: isActive("/user/history") ? "var(--primary)" : "transparent",
-                borderRadius: "12px",
-                margin: "4px 16px",
-                fontSize: "16px",
-                fontWeight: isActive("/user/history") ? "600" : "500",
-                transition: "all 0.2s",
-                boxShadow: isActive("/user/history") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-              }}>
+              <Link
+                to="/user/history"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "16px 24px",
+                  color: isActive("/user/history") ? "white" : "#94a3b8",
+                  textDecoration: "none",
+                  background: isActive("/user/history")
+                    ? "var(--primary)"
+                    : "transparent",
+                  borderRadius: "12px",
+                  margin: "4px 16px",
+                  fontSize: "16px",
+                  fontWeight: isActive("/user/history") ? "600" : "500",
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/user/history")
+                    ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                    : "none",
+                }}
+              >
                 ⏱️ My History
               </Link>
-              <Link to="/user/wishlist" style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                color: isActive("/user/wishlist") ? "white" : "#94a3b8",
-                textDecoration: "none",
-                background: isActive("/user/wishlist") ? "var(--primary)" : "transparent",
-                borderRadius: "12px",
-                margin: "4px 16px",
-                fontSize: "16px",
-                fontWeight: isActive("/user/wishlist") ? "600" : "500",
-                transition: "all 0.2s",
-                boxShadow: isActive("/user/wishlist") ? "0 4px 12px rgba(236, 91, 19, 0.2)" : "none"
-              }}>
+              <Link
+                to="/user/wishlist"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "16px 24px",
+                  color: isActive("/user/wishlist") ? "white" : "#94a3b8",
+                  textDecoration: "none",
+                  background: isActive("/user/wishlist")
+                    ? "var(--primary)"
+                    : "transparent",
+                  borderRadius: "12px",
+                  margin: "4px 16px",
+                  fontSize: "16px",
+                  fontWeight: isActive("/user/wishlist") ? "600" : "500",
+                  transition: "all 0.2s",
+                  boxShadow: isActive("/user/wishlist")
+                    ? "0 4px 12px rgba(236, 91, 19, 0.2)"
+                    : "none",
+                }}
+              >
                 ❤️ My Wishlist
               </Link>
             </div>
@@ -444,58 +678,69 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
       </aside>
 
       {/* Main Content */}
-      <main style={{
-        marginLeft: "320px",
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--bg-color)"
-      }}>
-        {/* Header */}
-        <header style={{
-          height: "76px",
-          background: "var(--header-gradient)",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+      <main
+        style={{
+          marginLeft: "320px",
+          flex: 1,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          paddingLeft: "32px",
-          paddingRight: "32px",
-          position: "sticky",
-          top: 0,
-          zIndex: 999
-        }}>
+          flexDirection: "column",
+          background: "var(--bg-color)",
+        }}
+      >
+        {/* Header */}
+        <header
+          style={{
+            height: "76px",
+            background: "var(--header-gradient)",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            paddingLeft: "32px",
+            paddingRight: "32px",
+            position: "sticky",
+            top: 0,
+            zIndex: 999,
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             {/* Notification Bell */}
             <div style={{ position: "relative" }}>
               <button
-                onClick={() => { setShowNotif(!showNotif); setShowProfile(false); }}
+                onClick={() => {
+                  setShowNotif(!showNotif);
+                  setShowProfile(false);
+                }}
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   fontSize: "28px",
                   position: "relative",
-                  color: "white"
+                  color: "white",
                 }}
               >
                 🔔
                 {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: "-2px",
-                    right: "-2px",
-                    width: "22px",
-                    height: "22px",
-                    background: "#ec5b13",
-                    borderRadius: "50%",
-                    border: "2px solid #7c3aed",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>{unreadCount}</span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-2px",
+                      right: "-2px",
+                      width: "22px",
+                      height: "22px",
+                      background: "#ec5b13",
+                      borderRadius: "50%",
+                      border: "2px solid #7c3aed",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {unreadCount}
+                  </span>
                 )}
               </button>
 
@@ -506,48 +751,121 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                     style={{ position: "fixed", inset: 0, zIndex: 998 }}
                     onClick={() => setShowNotif(false)}
                   />
-                  <div style={{
-                    position: "absolute",
-                    top: "40px",
-                    right: "0",
-                    width: "320px",
-                    background: "white",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    zIndex: 999,
-                    overflow: "hidden"
-                  }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0", fontWeight: "600", fontSize: "14px", color: "#1e293b", display: "flex", justifyContent: "space-between" }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "40px",
+                      right: "0",
+                      width: "320px",
+                      background: "white",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      zIndex: 999,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "12px 16px",
+                        borderBottom: "1px solid #e2e8f0",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        color: "#1e293b",
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <span>Notifications</span>
-                      <span style={{ background: "#f1f5f9", color: "#64748b", padding: "2px 8px", borderRadius: "12px", fontSize: "11px" }}>{unreadCount} New</span>
+                      <span
+                        style={{
+                          background: "#f1f5f9",
+                          color: "#64748b",
+                          padding: "2px 8px",
+                          borderRadius: "12px",
+                          fontSize: "11px",
+                        }}
+                      >
+                        {unreadCount} New
+                      </span>
                     </div>
                     <div style={{ maxHeight: "300px", overflowY: "auto" }}>
                       {notifications.length === 0 ? (
-                        <div style={{ padding: "24px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
+                        <div
+                          style={{
+                            padding: "24px",
+                            textAlign: "center",
+                            color: "#94a3b8",
+                            fontSize: "13px",
+                          }}
+                        >
                           No new notifications
                         </div>
                       ) : (
-                        notifications.map(n => (
+                        notifications.map((n) => (
                           <div
                             key={n.id}
                             onClick={() => {
                               setShowNotif(false);
                               if (n.link) navigate(n.link);
                             }}
-                            style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", transition: "background 0.2s" }}
-                            onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-                            onMouseLeave={e => e.currentTarget.style.background = "white"}
+                            style={{
+                              padding: "12px 16px",
+                              borderBottom: "1px solid #f1f5f9",
+                              cursor: "pointer",
+                              transition: "background 0.2s",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#f8fafc")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "white")
+                            }
                           >
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                              <p style={{ margin: 0, fontSize: "13px", color: "#1e293b", fontWeight: "600" }}>{n.title}</p>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: "13px",
+                                  color: "#1e293b",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                {n.title}
+                              </p>
                             </div>
-                            <p style={{ margin: "0", fontSize: "12px", color: "#64748b", lineHeight: "1.4" }}>{n.message}</p>
+                            <p
+                              style={{
+                                margin: "0",
+                                fontSize: "12px",
+                                color: "#64748b",
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              {n.message}
+                            </p>
                           </div>
                         ))
                       )}
                     </div>
                     {notifications.length > 0 && (
-                      <div style={{ padding: "10px", textAlign: "center", borderTop: "1px solid #e2e8f0", fontSize: "12px", color: "#ec5b13", cursor: "pointer", fontWeight: "600" }} onClick={() => setNotifications([])}>
+                      <div
+                        style={{
+                          padding: "10px",
+                          textAlign: "center",
+                          borderTop: "1px solid #e2e8f0",
+                          fontSize: "12px",
+                          color: "#ec5b13",
+                          cursor: "pointer",
+                          fontWeight: "600",
+                        }}
+                        onClick={() => setNotifications([])}
+                      >
                         Mark all as read
                       </div>
                     )}
@@ -556,34 +874,78 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
               )}
             </div>
 
-            <div style={{ width: "1px", height: "24px", background: "rgba(255,255,255,0.2)" }}></div>
+            <div
+              style={{
+                width: "1px",
+                height: "24px",
+                background: "rgba(255,255,255,0.2)",
+              }}
+            ></div>
 
             {/* Profile Dropdown */}
             <div style={{ position: "relative" }}>
               <div
-                style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}
-                onClick={() => { setShowProfile(!showProfile); setShowNotif(false); }}
-              >
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ margin: 0, fontSize: "15px", fontWeight: "600", color: "white" }}>{auth?.username || "Guest"}</p>
-                  <p style={{ margin: "2px 0 0 0", fontSize: "13px", color: "rgba(255,255,255,0.8)", textTransform: "capitalize" }}>{auth?.role || "Member"} Portal</p>
-                </div>
-                <div style={{
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "10px",
-                  background: auth?.avatar ? "transparent" : "rgba(255,255,255,0.2)",
-                  color: "white",
+                style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  border: "2px solid rgba(255,255,255,0.5)",
-                  overflow: "hidden"
-                }}>
+                  gap: "12px",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setShowProfile(!showProfile);
+                  setShowNotif(false);
+                }}
+              >
+                <div style={{ textAlign: "right" }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "15px",
+                      fontWeight: "600",
+                      color: "white",
+                    }}
+                  >
+                    {auth?.username || "Guest"}
+                  </p>
+                  <p
+                    style={{
+                      margin: "2px 0 0 0",
+                      fontSize: "13px",
+                      color: "rgba(255,255,255,0.8)",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {auth?.role || "Member"} Portal
+                  </p>
+                </div>
+                <div
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "10px",
+                    background: auth?.avatar
+                      ? "transparent"
+                      : "rgba(255,255,255,0.2)",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "bold",
+                    fontSize: "20px",
+                    border: "2px solid rgba(255,255,255,0.5)",
+                    overflow: "hidden",
+                  }}
+                >
                   {auth?.avatar ? (
-                    <img src={auth.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img
+                      src={auth.avatar}
+                      alt="avatar"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
                   ) : (
                     auth?.username?.charAt(0).toUpperCase() || "G"
                   )}
@@ -596,39 +958,71 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                     style={{ position: "fixed", inset: 0, zIndex: 998 }}
                     onClick={() => setShowProfile(false)}
                   />
-                  <div style={{
-                    position: "absolute",
-                    top: "50px",
-                    right: "0",
-                    width: "220px",
-                    background: "white",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    zIndex: 999,
-                    overflow: "hidden",
-                    padding: "8px 0"
-                  }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "50px",
+                      right: "0",
+                      width: "220px",
+                      background: "white",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      zIndex: 999,
+                      overflow: "hidden",
+                      padding: "8px 0",
+                    }}
+                  >
                     {/* Header Info */}
-                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #e2e8f0", marginBottom: "8px", background: "#f8fafc" }}>
-                      <p style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#1e293b" }}>{auth?.username || "Guest"}</p>
-                      <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#64748b" }}>{auth?.role || "Member"} Account</p>
+                    <div
+                      style={{
+                        padding: "12px 16px",
+                        borderBottom: "1px solid #e2e8f0",
+                        marginBottom: "8px",
+                        background: "#f8fafc",
+                      }}
+                    >
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "15px",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                        }}
+                      >
+                        {auth?.username || "Guest"}
+                      </p>
+                      <p
+                        style={{
+                          margin: "4px 0 0 0",
+                          fontSize: "13px",
+                          color: "#64748b",
+                        }}
+                      >
+                        {auth?.role || "Member"} Account
+                      </p>
                     </div>
 
                     {/* Menu Items */}
                     {[
                       { icon: "👤", label: "Profile" },
-                      
+
                       { icon: "⚙️", label: "Settings" },
-                      { icon: "🚪", label: "Logout", isLogout: true }
+                      { icon: "🚪", label: "Logout", isLogout: true },
                     ].map((item, idx) => (
                       <div
                         key={idx}
                         onClick={() => {
                           setShowProfile(false);
 
-                          if (item.label === "Profile") { navigate('/profile');}
-                          if (item.label === "Settings") { navigate('/settings'); }
-                          if (item.isLogout) { handleLogout(); }
+                          if (item.label === "Profile") {
+                            navigate("/profile");
+                          }
+                          if (item.label === "Settings") {
+                            navigate("/settings");
+                          }
+                          if (item.isLogout) {
+                            handleLogout();
+                          }
                         }}
                         style={{
                           padding: "10px 16px",
@@ -640,13 +1034,21 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
                           color: item.isLogout ? "#ef4444" : "#475569",
                           fontWeight: "500",
                           transition: "background 0.2s",
-                          borderTop: item.isLogout ? "1px solid #e2e8f0" : "none",
-                          marginTop: item.isLogout ? "8px" : "0"
+                          borderTop: item.isLogout
+                            ? "1px solid #e2e8f0"
+                            : "none",
+                          marginTop: item.isLogout ? "8px" : "0",
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
-                        onMouseLeave={e => e.currentTarget.style.background = "white"}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = "#f1f5f9")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "white")
+                        }
                       >
-                        <span style={{ fontSize: "18px", opacity: 0.8 }}>{item.icon}</span>
+                        <span style={{ fontSize: "18px", opacity: 0.8 }}>
+                          {item.icon}
+                        </span>
                         {item.label}
                       </div>
                     ))}
@@ -658,24 +1060,24 @@ function Layout({ children, auth, openMenu, setOpenMenu, handleLogout }) {
         </header>
 
         {/* Page Content */}
-        <div style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0"
-        }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "0",
+          }}
+        >
           {children}
         </div>
       </main>
 
       {/* Floating Support Chat */}
       <SupportChatWidget auth={auth} />
-
     </div>
   );
 }
 
 function App() {
-
   const [auth, setAuth] = useState(() => {
     const savedUser = localStorage.getItem("user");
     return savedUser ? JSON.parse(savedUser) : null;
@@ -693,7 +1095,7 @@ function App() {
           handleLogout();
         } else {
           // Sync with server data (in case fullName/avatar changed)
-          // setAuth(currentUser); 
+          // setAuth(currentUser);
           // localStorage.setItem("user", JSON.stringify(currentUser));
         }
       } catch (err) {
@@ -704,7 +1106,6 @@ function App() {
     };
     verifyUser();
   }, [auth?.id]); // Run when auth changes or on mount
-
 
   const handleLogout = () => {
     setAuth(null);
@@ -719,9 +1120,7 @@ function App() {
         setOpenMenu={setOpenMenu}
         handleLogout={handleLogout}
       >
-
         <Routes>
-
           <Route
             path="/"
             element={
@@ -759,7 +1158,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           <Route
             path="/admin/managerule"
             element={
@@ -844,9 +1243,17 @@ function App() {
           <Route
             path="/profile"
             element={
-               <ProtectedRoute auth={auth}>
-               <CustomerProfile auth={auth} />
-               </ProtectedRoute>
+              <ProtectedRoute auth={auth}>
+                <CustomerProfile auth={auth} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/book-return"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="admin">
+                <ManageBookReturn />
+              </ProtectedRoute>
             }
           />
 
@@ -876,7 +1283,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/user/terms"
+            element={
+              <ProtectedRoute auth={auth} allowedRole="user">
+                <UserTerms />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/user/books/:id"
@@ -887,10 +1301,19 @@ function App() {
             }
           />
 
-          <Route path="/settings" element={<ProtectedRoute auth={auth}><UserSettings auth={auth} setAuth={setAuth} handleLogout={handleLogout} /></ProtectedRoute>} />
-
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute auth={auth}>
+                <UserSettings
+                  auth={auth}
+                  setAuth={setAuth}
+                  handleLogout={handleLogout}
+                />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-
       </Layout>
 
       <style>{`
@@ -907,7 +1330,6 @@ function App() {
           transition: all 0.2s ease;
         }
       `}</style>
-
     </Router>
   );
 }
