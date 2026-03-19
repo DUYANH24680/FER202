@@ -165,15 +165,16 @@ const styles = {
     color,
     background: bg,
   }),
-  actionBtn: (color, bg) => ({
-    background: bg,
-    color,
+  actionBtn: (color, bg, disabled = false) => ({
+    background: disabled ? "#f1f2f6" : bg,
+    color: disabled ? "#c0c4d0" : color,
     border: "none",
     borderRadius: "7px",
     padding: "6px 12px",
     fontSize: "12px",
     fontWeight: "600",
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.7 : 1,
   }),
   emptyRow: {
     textAlign: "center",
@@ -264,19 +265,15 @@ const styles = {
     cursor: "pointer",
     boxShadow: "0 2px 8px rgba(108,99,255,0.3)",
   },
-
   toast: {
     position: "fixed",
     bottom: "24px",
     right: "24px",
-    background: "#16a34a",
-    color: "#fff",
     borderRadius: "10px",
     padding: "12px 20px",
     fontWeight: "600",
     fontSize: "14px",
     zIndex: 2000,
-    boxShadow: "0 4px 16px rgba(22,163,74,0.3)",
   },
 };
 
@@ -298,7 +295,7 @@ export default function AdminUserList({ auth, handleLogout }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ username: "", password: "", role: "user", locked: false });
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({ msg: "", type: "success" });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { fetchUsers(); }, []);
@@ -308,9 +305,9 @@ export default function AdminUserList({ auth, handleLogout }) {
     setUsers(res.data);
   };
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast({ msg: "", type: "success" }), 3000);
   };
 
   const filtered = users.filter((u) => {
@@ -330,7 +327,6 @@ export default function AdminUserList({ auth, handleLogout }) {
     setForm({ username: user.username, password: user.password, role: user.role, locked: !!user.locked });
     setModal({ type: "edit", user });
   };
-
 
   const handleSave = async () => {
     if (!form.username.trim() || !form.password.trim()) return;
@@ -352,19 +348,17 @@ export default function AdminUserList({ auth, handleLogout }) {
     }
   };
 
-
   const toggleLock = async (user) => {
-    const isSelf = user.id === auth?.id;
-    await axios.patch(`${API}/users/${user.id}`, { locked: !user.locked });
-    const msg = isSelf 
-        ? (user.locked ? "✓ Unlocked. Logging out..." : "✓ Account locked. Logging out...")
-        : (user.locked ? "✓ Account unlocked" : "✓ Account locked");
-    showToast(msg);
-    
-    if (isSelf && handleLogout) {
-        setTimeout(() => handleLogout(), 1000);
+    const isSelf = String(user.id) === String(auth?.id);
+
+    // Prevent admin from locking their own account
+    if (isSelf && !user.locked) {
+      showToast("⚠ You cannot lock your own account.", "warning");
+      return;
     }
-    
+
+    await axios.patch(`${API}/users/${user.id}`, { locked: !user.locked });
+    showToast(user.locked ? "✓ Account unlocked" : "✓ Account locked");
     fetchUsers();
   };
 
@@ -374,6 +368,10 @@ export default function AdminUserList({ auth, handleLogout }) {
     locked: users.filter((u) => u.locked).length,
     active: users.filter((u) => !u.locked).length,
   };
+
+  const toastBg = toast.type === "warning"
+    ? { background: "#d97706", boxShadow: "0 4px 16px rgba(217,119,6,0.3)" }
+    : { background: "#16a34a", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" };
 
   return (
     <div style={styles.page}>
@@ -390,7 +388,7 @@ export default function AdminUserList({ auth, handleLogout }) {
         {[
           { label: "Total Users", num: stats.total, accent: C.accent },
           { label: "Admins", num: stats.admins, accent: C.warning },
-          { label: "Active Memebers", num: stats.active, accent: C.success },
+          { label: "Active Members", num: stats.active, accent: C.success },
           { label: "Locked Accounts", num: stats.locked, accent: C.danger },
         ].map((s) => (
           <div key={s.label} style={styles.statCard(s.accent)}>
@@ -439,8 +437,11 @@ export default function AdminUserList({ auth, handleLogout }) {
               filtered.map((user, idx) => {
                 const [ac, bg] = avatarColor(user.username);
                 const isLocked = !!user.locked;
+                const isSelf = String(user.id) === String(auth?.id);
                 const isLast = idx === filtered.length - 1;
                 const tdStyle = { ...styles.td, ...(isLast ? { borderBottom: "none" } : {}) };
+                const lockDisabled = isSelf && !isLocked; // can't lock yourself
+
                 return (
                   <tr
                     key={user.id}
@@ -454,7 +455,16 @@ export default function AdminUserList({ auth, handleLogout }) {
                           {user.username[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <div style={{ fontWeight: "600" }}>{user.username}</div>
+                          <div style={{ fontWeight: "600" }}>
+                            {user.username}
+                            {isSelf && (
+                              <span style={{
+                                marginLeft: "8px", fontSize: "11px", fontWeight: "600",
+                                color: C.accentText, background: C.accentSoft,
+                                padding: "2px 7px", borderRadius: "10px"
+                              }}>You</span>
+                            )}
+                          </div>
                           <div style={{ fontSize: "12px", color: C.textMuted }}>ID: {user.id}</div>
                         </div>
                       </div>
@@ -476,15 +486,19 @@ export default function AdminUserList({ auth, handleLogout }) {
                       )}
                     </td>
                     <td style={tdStyle}>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                         <button style={styles.actionBtn(C.accentText, C.accentSoft)} onClick={() => openEdit(user)}>✏ Edit</button>
                         <button
-                          style={styles.actionBtn(isLocked ? C.success : C.warning, isLocked ? C.successSoft : C.warningSoft)}
-                          onClick={() => toggleLock(user)}
+                          style={styles.actionBtn(
+                            isLocked ? C.success : C.warning,
+                            isLocked ? C.successSoft : C.warningSoft,
+                            lockDisabled
+                          )}
+                          onClick={() => !lockDisabled && toggleLock(user)}
+                          title={lockDisabled ? "You cannot lock your own account" : ""}
                         >
                           {isLocked ? "🔓 Unlock" : "🔒 Lock"}
                         </button>
-                        
                       </div>
                     </td>
                   </tr>
@@ -539,9 +553,11 @@ export default function AdminUserList({ auth, handleLogout }) {
         </div>
       )}
 
-
-
-      {toast && <div style={styles.toast}>{toast}</div>}
+      {toast.msg && (
+        <div style={{ ...styles.toast, color: "#fff", ...toastBg }}>
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 }

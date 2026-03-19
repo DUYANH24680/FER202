@@ -9,7 +9,8 @@
       "fullName": "Nguyễn Văn A",
       "email": "admin@gmail.com",
       "phone": "0123456789",
-      "address": "Hà Nội"
+      "address": "Hà Nội",
+      "locked": false
     },
     {
       "id": "2",
