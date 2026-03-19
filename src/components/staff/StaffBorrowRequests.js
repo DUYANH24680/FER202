@@ -11,7 +11,7 @@ export default function StaffBorrowRequests() {
 
   const API = "http://localhost:9999";
 
-  /* ---------- LOAD ---------- */
+  /* ---------- LOAD DATA ---------- */
   const loadData = async () => {
     try {
       const [borrowRes, bookRes, userRes] = await Promise.all([
@@ -32,13 +32,11 @@ export default function StaffBorrowRequests() {
     loadData();
   }, []);
 
-  /* ---------- HELPER ---------- */
+  /* ---------- HELPERS ---------- */
   const isSame = (a, b) => String(a) === String(b);
-
   const getUser = (id) => users.find(u => isSame(u.id, id));
   const getBook = (id) => books.find(b => isSame(b.id, id));
 
-  /* ---------- TITLE LOGIC ---------- */
   const getSameTitleBooks = (title) =>
     books.filter(b => b.title === title);
 
@@ -57,33 +55,25 @@ export default function StaffBorrowRequests() {
     getAvailableCopies(book.title) <= 0;
 
   /* ---------- TIME ---------- */
-const getTime = (req) => {
-  if (req.status === "rejected") return "";
-  if (req.status === "pending") {
-    return req.requestDate
-      ? new Date(req.requestDate).toLocaleString()
-      : "-";
-  }
-  if (req.status === "approved" && !req.returnDate) {
-    return "Đang mượn";
-  }
+  const getTime = (req) => {
+    if (req.status === "rejected") return ""; // Reject để trống
+    if (req.status === "pending") {
+      return req.requestDate
+        ? new Date(req.requestDate).toLocaleString()
+        : "-";
+    }
 
-  if (req.approvedDate && req.returnDate) {
-    const start = req.approvedDate.split("T")[0];
-    const end = req.returnDate.split("T")[0];
+    if (req.status === "approved") {
+      // Không dùng returnDate để tính
+      if (!req.approveDate) return "-";
+      const start = new Date(req.approveDate);
+      const now = new Date();
+      const diffDays = Math.ceil((now - start) / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? `${diffDays} ngày` : "Đang mượn";
+    }
 
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    const diffDays = Math.floor(
-      (endDate - startDate) / (1000 * 60 * 60 * 24)
-    );
-
-    return `${diffDays} ngày`;
-  }
-
-  return "-";
-};
+    return "-";
+  };
 
   /* ---------- STATUS ---------- */
   const renderStatus = (status) => {
@@ -97,52 +87,49 @@ const getTime = (req) => {
   };
 
   /* ---------- ACTION ---------- */
+ const handleApprove = async (req) => {
+  try {
+    const book = getBook(req.bookId);
+    if (!book) return;
 
-  const handleApprove = async (req) => {
-    try {
-      const book = getBook(req.bookId);
-      if (!book) return;
-
-      if (isOutOfStock(book)) {
-        alert("Hết sách!");
-        return;
-      }
-
-      const availableBook = books.find(
-        b =>
-          b.title === book.title &&
-          b.status !== "borrowed" &&
-          b.available !== false
-      );
-
-      if (!availableBook) {
-        alert("Không còn bản nào!");
-        return;
-      }
-
-      await axios.patch(`${API}/borrows/${req.id}`, {
-        status: "approved",
-        bookId: availableBook.id,
-        approveDate: new Date().toISOString()
-      });
-
-      await axios.patch(`${API}/books/${availableBook.id}`, {
-        status: "borrowed",
-        available: false
-      });
-
-      loadData();
-
-    } catch (err) {
-      console.error(err);
+    if (isOutOfStock(book)) {
+      alert("Hết sách!");
+      return;
     }
-  };
 
-  /* ---------- FIX REJECT ---------- */
+    const availableBook = books.find(
+      b =>
+        b.title === book.title &&
+        b.status !== "borrowed" &&
+        b.available !== false
+    );
+
+    if (!availableBook) {
+      alert("Không còn bản nào!");
+      return;
+    }
+
+    await axios.patch(`${API}/borrows/${req.id}`, {
+      status: "approved",
+      bookId: availableBook.id,
+      approveDate: new Date().toISOString()
+    });
+
+    await axios.patch(`${API}/books/${availableBook.id}`, {
+      status: "borrowed",
+      available: false
+    });
+
+    // reload dữ liệu để staff & user đều thấy cập nhật
+    loadData();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   const handleReject = async (req) => {
     try {
       const reason = (rejectReasons[req.id] || "").trim();
-
       if (!reason) {
         alert("Nhập lý do reject!");
         return;
@@ -153,28 +140,18 @@ const getTime = (req) => {
         rejectReason: reason
       });
 
-      setRejectReasons({
-        ...rejectReasons,
-        [req.id]: ""
-      });
-
+      setRejectReasons({ ...rejectReasons, [req.id]: "" });
       loadData();
-
     } catch (err) {
       console.error(err);
     }
   };
 
-  /* ---------- TOGGLE ---------- */
   const toggleRow = (id) => {
-    setOpenRow({
-      ...openRow,
-      [id]: !openRow[id]
-    });
+    setOpenRow({ ...openRow, [id]: !openRow[id] });
   };
 
   /* ---------- UI ---------- */
-
   return (
     <div className="container mt-4">
       <h2>Borrow Management</h2>
@@ -200,15 +177,9 @@ const getTime = (req) => {
               <React.Fragment key={req.id}>
                 <tr>
                   <td>{user?.username || "Unknown"}</td>
-
                   <td>{book ? <b>{book.title}</b> : "Unknown"}</td>
-
-                  <td>
-                    {renderStatus(req.status)}
-                  </td>
-
+                  <td>{renderStatus(req.status)}</td>
                   <td>{getTime(req)}</td>
-
                   <td>
                     {req.status === "pending" && (
                       <>
@@ -218,7 +189,6 @@ const getTime = (req) => {
                         >
                           Approve
                         </Button>{" "}
-
                         <Form.Control
                           size="sm"
                           placeholder="Reason..."
@@ -231,7 +201,6 @@ const getTime = (req) => {
                           }
                           className="mt-1 mb-1"
                         />
-
                         <Button
                           variant="danger"
                           onClick={() => handleReject(req)}
@@ -241,7 +210,6 @@ const getTime = (req) => {
                       </>
                     )}
                   </td>
-
                   <td>
                     <Button
                       size="sm"
@@ -260,14 +228,17 @@ const getTime = (req) => {
                       <div style={{ padding: "10px" }}>
                         {book && (
                           <>
-                            <b>{book.title}</b><br />
-                            Barcode: {book.barcode}<br />
-                            Total: {getTotalCopies(book.title)}<br />
-                            Borrowed: {getBorrowedCopies(book.title)}<br />
+                            <b>{book.title}</b>
+                            <br />
+                            Barcode: {book.barcode || "-"}
+                            <br />
+                            Total: {getTotalCopies(book.title)}
+                            <br />
+                            Borrowed: {getBorrowedCopies(book.title)}
+                            <br />
                             Available: {getAvailableCopies(book.title)}
                           </>
                         )}
-
                         {req.rejectReason && (
                           <div style={{ color: "red", marginTop: "8px" }}>
                             <b>Reject reason:</b> {req.rejectReason}
